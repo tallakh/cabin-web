@@ -1,8 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { getCabins, getBookings, getUserProfile } from '@/lib/db/queries'
 import Calendar from '@/components/Calendar'
-import { useTranslations } from 'next-intl'
 import { getTranslations } from 'next-intl/server'
+import type { Cabin, Booking } from '@/types/database'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -13,8 +13,8 @@ export default async function DashboardPage() {
     return null
   }
 
-  let cabins = []
-  let bookings = []
+  let cabins: Cabin[] = []
+  let bookings: Booking[] = []
   const profile = await getUserProfile(user.id)
 
   try {
