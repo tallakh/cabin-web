@@ -19,26 +19,26 @@ export default function LanguageSwitcher() {
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1 sm:gap-2">
       <button
         onClick={() => switchLocale('en')}
-        className={`px-2 py-1 text-sm rounded ${
+        className={`px-1.5 sm:px-2 py-1 text-xs sm:text-sm rounded ${
           locale === 'en'
             ? 'bg-indigo-100 text-indigo-700 font-medium'
             : 'text-gray-600 hover:text-gray-900'
         }`}
       >
-        English
+        EN
       </button>
       <button
         onClick={() => switchLocale('no')}
-        className={`px-2 py-1 text-sm rounded ${
+        className={`px-1.5 sm:px-2 py-1 text-xs sm:text-sm rounded ${
           locale === 'no'
             ? 'bg-indigo-100 text-indigo-700 font-medium'
             : 'text-gray-600 hover:text-gray-900'
         }`}
       >
-        Norsk
+        NO
       </button>
     </div>
   )

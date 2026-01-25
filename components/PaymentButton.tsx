@@ -21,40 +21,14 @@ export default function PaymentButton({
   const [error, setError] = useState<string | null>(null)
   const [showInstructions, setShowInstructions] = useState(false)
 
-  // Generate Vipps URL
-  const amountInOre = Math.round(amount * 100)
-  const vippsUrl = `vipps://pay?phone=${phoneNumber}&amount=${amountInOre}&text=Booking%20${bookingId.slice(0, 8)}`
+  // Note: Vipps doesn't support simple deep links for payments
+  // Users need to manually enter payment details in the Vipps app
 
-  const handlePayNow = async () => {
-    setLoading(true)
+  const handlePayNow = () => {
+    // Vipps doesn't support simple deep links for payments
+    // Show payment instructions directly
+    setShowInstructions(true)
     setError(null)
-
-    try {
-      // Try to open Vipps app (deep link)
-      // On mobile with Vipps installed, this will open the app
-      // On desktop, show instructions
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
-      
-      if (isMobile) {
-        // Try deep link on mobile
-        window.location.href = vippsUrl
-        // Show instructions as fallback after a short delay
-        setTimeout(() => {
-          setShowInstructions(true)
-          setLoading(false)
-        }, 2000)
-      } else {
-        // On desktop, show instructions directly
-        setShowInstructions(true)
-        setLoading(false)
-      }
-      
-      // Don't mark as paid yet - user needs to confirm payment was successful
-    } catch (err: any) {
-      setError(err.message || t('errors.generic'))
-      setShowInstructions(true) // Show instructions on error too
-      setLoading(false)
-    }
   }
 
   const handleMarkAsPaid = async () => {
@@ -62,9 +36,6 @@ export default function PaymentButton({
     setError(null)
 
     try {
-      const amountInOre = Math.round(amount * 100)
-      const vippsUrl = `vipps://pay?phone=${phoneNumber}&amount=${amountInOre}&text=Booking%20${bookingId.slice(0, 8)}`
-      
       // Update booking payment status to 'paid' when user confirms
       const response = await fetch(`/api/bookings/${bookingId}/payment`, {
         method: 'POST',
@@ -72,7 +43,6 @@ export default function PaymentButton({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          vipps_url: vippsUrl,
           vipps_transaction_id: bookingId, // Using booking ID as transaction ID for tracking
         }),
       })

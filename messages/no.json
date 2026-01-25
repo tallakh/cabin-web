@@ -140,7 +140,8 @@
     "legend": "Forklaring",
     "approved": "Godkjent",
     "pending": "Venter",
-    "deleteBooking": "Slett booking"
+    "deleteBooking": "Slett booking",
+    "more": "flere"
   },
   "cabins": {
     "name": "Navn",

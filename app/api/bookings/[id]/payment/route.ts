@@ -36,7 +36,7 @@ export async function POST(
     }
 
     const body = await request.json()
-    const { vipps_transaction_id } = body
+    const { vipps_transaction_id, vipps_url } = body
 
     // Update payment status to paid
     const { data, error } = await supabase

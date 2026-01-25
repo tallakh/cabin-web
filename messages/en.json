@@ -140,7 +140,8 @@
     "legend": "Legend",
     "approved": "Approved",
     "pending": "Pending",
-    "deleteBooking": "Delete booking"
+    "deleteBooking": "Delete booking",
+    "more": "more"
   },
   "cabins": {
     "name": "Name",
