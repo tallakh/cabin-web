@@ -104,10 +104,37 @@ export async function POST(request: Request) {
       serviceRoleKey
     )
 
+    // Get the site URL from environment variable or use request origin
+    // This ensures emails contain the correct production URL, not localhost
+    let siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+    
+    if (!siteUrl) {
+      // Try to get from Vercel environment variable
+      if (process.env.VERCEL_URL) {
+        siteUrl = `https://${process.env.VERCEL_URL}`
+      } else {
+        // Fallback: try to get from request headers
+        const origin = request.headers.get('origin') || request.headers.get('host')
+        if (origin) {
+          siteUrl = origin.startsWith('http') ? origin : `https://${origin}`
+        } else {
+          siteUrl = 'http://localhost:3000'
+        }
+      }
+    }
+    
+    // Determine locale from request headers or default to 'en'
+    const acceptLanguage = request.headers.get('accept-language') || ''
+    const locale = acceptLanguage.includes('no') ? 'no' : 'en'
+    
+    // Construct redirect URL to login page with locale
+    const redirectTo = `${siteUrl}/${locale}/login`
+
     const { data: invitedUser, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
       data: {
         full_name: full_name || email.split('@')[0],
       },
+      redirectTo: redirectTo,
     })
 
     if (inviteError) {
