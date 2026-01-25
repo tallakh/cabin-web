@@ -56,7 +56,7 @@ export default function DebugPage() {
     }
 
     check()
-  }, [])
+  }, [supabase])
 
   return (
     <div className="p-8">
