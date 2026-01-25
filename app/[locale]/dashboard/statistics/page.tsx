@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { getTranslations, getLocale } from 'next-intl/server'
 import StatisticsTable from '@/components/StatisticsTable'
-import { getBookingStatistics, getAvailableYears } from '@/lib/db/queries'
+import { getBookingStatistics, getAvailableYears, type BookingStats } from '@/lib/db/queries'
 
 export default async function StatisticsPage() {
   const supabase = await createClient()
@@ -18,8 +18,8 @@ export default async function StatisticsPage() {
   const currentYear = new Date().getFullYear()
 
   // Fetch initial statistics data
-  let statistics = []
-  let availableYears = [currentYear]
+  let statistics: BookingStats[] = []
+  let availableYears: number[] = [currentYear]
 
   try {
     const [stats, years] = await Promise.all([

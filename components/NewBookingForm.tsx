@@ -39,7 +39,9 @@ export default function NewBookingForm({ cabins }: NewBookingFormProps) {
       return
     }
 
-    if (new Date(formData.start_date) < new Date().setHours(0, 0, 0, 0)) {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    if (new Date(formData.start_date) < today) {
       setError(t('bookings.startDateNotPast'))
       setLoading(false)
       return

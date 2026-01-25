@@ -49,13 +49,13 @@ export default function TestLoginPage() {
           .single()
 
         if (profileError) {
-          setDetails(prev => ({
+          setDetails((prev: any) => ({
             ...prev,
             profileError: profileError.message,
             profileCode: profileError.code,
           }))
         } else {
-          setDetails(prev => ({
+          setDetails((prev: any) => ({
             ...prev,
             profile,
           }))
@@ -67,7 +67,7 @@ export default function TestLoginPage() {
           .select('count')
           .limit(1)
 
-        setDetails(prev => ({
+        setDetails((prev: any) => ({
           ...prev,
           cabinsAccessible: !cabinsError,
           cabinsError: cabinsError?.message,
