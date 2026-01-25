@@ -146,16 +146,18 @@ export default function Calendar({ cabins, bookings, currentUserId, isAdmin }: C
                     const canDelete = canDeleteBooking(booking)
                     const baseColor = getCabinColor(booking.cabin_id)
                     const borderStyle = isPending ? 'border-dashed opacity-75' : 'border-solid'
+                    const bookerName = booking.user_profiles?.full_name || booking.user_profiles?.email || t('common.user')
                     
                     return (
                       <div
                         key={booking.id}
                         className={`text-[10px] sm:text-xs p-0.5 sm:p-1 rounded border ${baseColor} ${borderStyle} group relative`}
-                        title={`${cabin?.name || t('bookings.cabin')}: ${booking.user_profiles?.full_name || t('common.user')} (${t(`bookings.status.${booking.status}`)})`}
+                        title={`${cabin?.name || t('bookings.cabin')}: ${bookerName} (${t(`bookings.status.${booking.status}`)})`}
                       >
-                        <div className="font-medium truncate">{cabin?.name || t('bookings.cabin')}</div>
+                        <div className="font-medium truncate sm:hidden">{bookerName}</div>
+                        <div className="font-medium truncate hidden sm:block">{cabin?.name || t('bookings.cabin')}</div>
                         <div className="text-[9px] sm:text-xs truncate text-gray-600 hidden sm:block">
-                          {booking.user_profiles?.full_name || booking.user_profiles?.email || t('common.user')}
+                          {bookerName}
                         </div>
                         {canDelete && booking.status === 'approved' && (
                           <button

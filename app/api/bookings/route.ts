@@ -86,16 +86,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'End date must be after start date' }, { status: 400 })
     }
 
-    // Check for overlapping approved bookings
-    const { data: existingBookings } = await supabase
+    // Check for overlapping approved bookings (definite conflicts)
+    const { data: approvedBookings } = await supabase
       .from('bookings')
       .select('*')
       .eq('cabin_id', cabin_id)
       .eq('status', 'approved')
 
-    if (existingBookings && existingBookings.length > 0) {
-      // Check for actual overlap
-      const hasOverlap = existingBookings.some(booking => {
+    if (approvedBookings && approvedBookings.length > 0) {
+      // Check for actual overlap with approved bookings
+      const hasApprovedOverlap = approvedBookings.some(booking => {
         const bookingStart = new Date(booking.start_date)
         const bookingEnd = new Date(booking.end_date)
         // Reset time to compare dates only
@@ -104,9 +104,30 @@ export async function POST(request: Request) {
         return (start <= bookingEnd && end >= bookingStart)
       })
 
-      if (hasOverlap) {
+      if (hasApprovedOverlap) {
         return NextResponse.json({ error: 'Cabin is already booked for these dates' }, { status: 400 })
       }
+    }
+
+    // Check for overlapping pending bookings (potential conflicts)
+    // Allow these but the admin will see multiple pending requests for the same dates
+    const { data: pendingBookings } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('cabin_id', cabin_id)
+      .eq('status', 'pending')
+
+    if (pendingBookings && pendingBookings.length > 0) {
+      const hasPendingOverlap = pendingBookings.some(booking => {
+        const bookingStart = new Date(booking.start_date)
+        const bookingEnd = new Date(booking.end_date)
+        bookingStart.setHours(0, 0, 0, 0)
+        bookingEnd.setHours(0, 0, 0, 0)
+        return (start <= bookingEnd && end >= bookingStart)
+      })
+
+      // Note: We allow pending overlaps - the admin will see multiple requests
+      // and can decide which one(s) to approve. This is intentional for flexibility.
     }
 
     const { data: booking, error } = await supabase
