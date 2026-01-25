@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { name, description, capacity } = body
+    const { name, description, capacity, image_url, nightly_fee } = body
 
     if (!name) {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 })
@@ -49,6 +49,8 @@ export async function POST(request: Request) {
         name,
         description: description || null,
         capacity: capacity || 1,
+        image_url: image_url || null,
+        nightly_fee: nightly_fee || 0,
       })
       .select()
       .single()

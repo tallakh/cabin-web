@@ -71,6 +71,27 @@
       "pending": "Venter",
       "approved": "Godkjent",
       "rejected": "Avslått"
+    },
+    "payment": {
+      "paymentStatus": "Betalingsstatus",
+      "unpaid": "Ikke Betalt",
+      "paid": "Betalt",
+      "payNow": "Betal Nå",
+      "processing": "Behandler...",
+      "totalAmount": "Total Beløp",
+      "nights": "netter",
+      "perNight": "per natt",
+      "instructions": "Betalingsinstruksjoner:",
+      "sendTo": "Send betaling til",
+      "amount": "Beløp",
+      "reference": "Referanse",
+      "markAsPaid": "Merk som Betalt",
+      "markAsPaidNote": "Klikk på denne knappen etter at du har fullført betalingen i Vipps",
+      "howToPay": "Slik betaler du:",
+      "step1": "Åpne Vipps-appen på telefonen din",
+      "step2": "Trykk på 'Send penger'",
+      "step3": "Skriv inn telefonnummeret og beløpet vist over",
+      "step4": "Legg til bookingreferansen i meldingsfeltet (valgfritt)"
     }
   },
   "admin": {
@@ -86,6 +107,8 @@
     "inviteNewUsersManage": "Inviter nye brukere og administrer brukerkontoer",
     "approve": "Godkjenn",
     "reject": "Avslå",
+    "markPaid": "Merk som Betalt",
+    "markUnpaid": "Merk som Ikke Betalt",
     "pendingApproval": "Venter Godkjenning",
     "allBookings": "Alle Bookinger",
     "noBookings": "Ingen bookinger ennå.",
@@ -123,6 +146,14 @@
     "name": "Navn",
     "description": "Beskrivelse",
     "capacity": "Kapasitet",
+    "nightlyFee": "Pris per Natt",
+    "image": "Bilde",
+    "cabinImage": "Hyttebilde",
+    "imageUploadHint": "PNG, JPG eller GIF opp til 5MB",
+    "uploadingImage": "Laster opp bilde",
+    "invalidImageType": "Filen må være et bilde",
+    "imageTooLarge": "Bildet må være mindre enn 5MB",
+    "deleteImageConfirm": "Er du sikker på at du vil slette dette bildet?",
     "noCabins": "Ingen hytter ennå. Opprett din første hytte!",
     "addCabin": "Legg til Hytte"
   },
@@ -146,7 +177,9 @@
     "failedToDeleteUser": "Kunne ikke slette bruker",
     "cabinAlreadyBooked": "Hytten er allerede booket for disse datoene",
     "serviceKeyNotConfigured": "Service role key ikke konfigurert. Vennligst sett SUPABASE_SERVICE_ROLE_KEY i miljøvariablene, eller inviter brukere gjennom Supabase Dashboard.",
-    "cannotDeleteUsers": "Service role key ikke konfigurert. Kan ikke slette brukere. Vennligst sett SUPABASE_SERVICE_ROLE_KEY miljøvariabel eller slett gjennom Supabase Dashboard."
+    "cannotDeleteUsers": "Service role key ikke konfigurert. Kan ikke slette brukere. Vennligst sett SUPABASE_SERVICE_ROLE_KEY miljøvariabel eller slett gjennom Supabase Dashboard.",
+    "failedToInitiatePayment": "Kunne ikke starte betaling",
+    "failedToUpload": "Kunne ikke laste opp bilde"
   },
   "success": {
     "bookingCreated": "Booking opprettet",

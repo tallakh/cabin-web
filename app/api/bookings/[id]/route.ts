@@ -3,9 +3,10 @@ import { NextResponse } from 'next/server'
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -16,7 +17,7 @@ export async function GET(
     const { data, error } = await supabase
       .from('bookings')
       .select('*, cabins(*)')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (error) throw error
@@ -52,9 +53,10 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -76,7 +78,7 @@ export async function PATCH(
     const { data: existingBooking } = await supabase
       .from('bookings')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (!existingBooking) {
@@ -92,18 +94,21 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { status, start_date, end_date, notes, cabin_id } = body
+    const { status, start_date, end_date, notes, cabin_id, payment_status } = body
 
     // Check if dates are being changed
     const datesChanged = (start_date && start_date !== existingBooking.start_date) || 
                         (end_date && end_date !== existingBooking.end_date)
 
-    // Only admins can change status and cabin directly
+    // Only admins can change status, cabin, and payment_status directly
     if (status && !isAdmin) {
       return NextResponse.json({ error: 'Only admins can change booking status' }, { status: 403 })
     }
     if (cabin_id && !isAdmin) {
       return NextResponse.json({ error: 'Only admins can change booking cabin' }, { status: 403 })
+    }
+    if (payment_status && !isAdmin) {
+      return NextResponse.json({ error: 'Only admins can change payment status' }, { status: 403 })
     }
 
     const updateData: any = {}
@@ -111,19 +116,49 @@ export async function PATCH(
     // If user (non-admin) changes dates, automatically set status to pending
     if (isOwner && !isAdmin && datesChanged) {
       updateData.status = 'pending'
+      updateData.payment_status = 'unpaid'
+      updateData.payment_amount = null
     } else if (status && isAdmin) {
       updateData.status = status
+      
+      // Calculate payment amount when approving booking
+      if (status === 'approved') {
+        const finalStartDate = start_date || existingBooking.start_date
+        const finalEndDate = end_date || existingBooking.end_date
+        const finalCabinId = cabin_id || existingBooking.cabin_id
+        
+        // Get cabin to get nightly_fee
+        const { data: cabinData } = await supabase
+          .from('cabins')
+          .select('nightly_fee')
+          .eq('id', finalCabinId)
+          .single()
+        
+        if (cabinData && cabinData.nightly_fee > 0) {
+          const start = new Date(finalStartDate)
+          const end = new Date(finalEndDate)
+          const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
+          const totalAmount = nights * parseFloat(cabinData.nightly_fee.toString())
+          
+          updateData.payment_amount = totalAmount
+          // Only set to unpaid if not already paid
+          if (!existingBooking.payment_status || existingBooking.payment_status === 'unpaid') {
+            updateData.payment_status = 'unpaid'
+          }
+        }
+      }
     }
     
     if (cabin_id && isAdmin) updateData.cabin_id = cabin_id
     if (start_date) updateData.start_date = start_date
     if (end_date) updateData.end_date = end_date
     if (notes !== undefined) updateData.notes = notes
+    if (payment_status && isAdmin) updateData.payment_status = payment_status
 
     const { data, error } = await supabase
       .from('bookings')
       .update(updateData)
-      .eq('id', params.id)
+      .eq('id', id)
       .select('*, cabins(*)')
       .single()
 
@@ -149,9 +184,10 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -173,7 +209,7 @@ export async function DELETE(
     const { data: existingBooking } = await supabase
       .from('bookings')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (!existingBooking) {
@@ -193,7 +229,7 @@ export async function DELETE(
     const { error } = await supabase
       .from('bookings')
       .delete()
-      .eq('id', params.id)
+      .eq('id', id)
 
     if (error) throw error
 

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import type { Cabin } from '@/types/database'
+import ImageUpload from './ImageUpload'
 
 interface CabinFormProps {
   cabin?: Cabin
@@ -19,7 +20,9 @@ export default function CabinForm({ cabin }: CabinFormProps) {
     name: cabin?.name || '',
     description: cabin?.description || '',
     capacity: cabin?.capacity || 1,
+    nightly_fee: cabin?.nightly_fee || 0,
   })
+  const [imageUrl, setImageUrl] = useState<string | null>(cabin?.image_url || null)
 
   useEffect(() => {
     if (cabin) {
@@ -27,7 +30,9 @@ export default function CabinForm({ cabin }: CabinFormProps) {
         name: cabin.name,
         description: cabin.description || '',
         capacity: cabin.capacity,
+        nightly_fee: cabin.nightly_fee || 0,
       })
+      setImageUrl(cabin.image_url || null)
     }
   }, [cabin])
 
@@ -51,7 +56,10 @@ export default function CabinForm({ cabin }: CabinFormProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          image_url: imageUrl,
+        }),
       })
 
       if (!response.ok) {
@@ -135,21 +143,47 @@ export default function CabinForm({ cabin }: CabinFormProps) {
           />
         </div>
 
-        <div>
-          <label htmlFor="capacity" className="block text-sm font-medium text-gray-700">
-            {t('cabins.capacity')} *
-          </label>
-          <input
-            type="number"
-            id="capacity"
-            name="capacity"
-            required
-            min="1"
-            value={formData.capacity}
-            onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) || 1 })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-white text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-          />
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="capacity" className="block text-sm font-medium text-gray-700">
+              {t('cabins.capacity')} *
+            </label>
+            <input
+              type="number"
+              id="capacity"
+              name="capacity"
+              required
+              min="1"
+              value={formData.capacity}
+              onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) || 1 })}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-white text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            />
+          </div>
+          <div>
+            <label htmlFor="nightly_fee" className="block text-sm font-medium text-gray-700">
+              {t('cabins.nightlyFee')} (kr)
+            </label>
+            <input
+              type="number"
+              id="nightly_fee"
+              name="nightly_fee"
+              min="0"
+              step="0.01"
+              value={formData.nightly_fee}
+              onChange={(e) => setFormData({ ...formData, nightly_fee: parseFloat(e.target.value) || 0 })}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-white text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            />
+          </div>
         </div>
+
+        {cabin && (
+          <ImageUpload
+            currentImageUrl={imageUrl}
+            cabinId={cabin.id}
+            onUploadSuccess={(url) => setImageUrl(url)}
+            onDeleteSuccess={() => setImageUrl(null)}
+          />
+        )}
 
         <div className="flex justify-between gap-4">
           <div>

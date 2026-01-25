@@ -71,6 +71,27 @@
       "pending": "Pending",
       "approved": "Approved",
       "rejected": "Rejected"
+    },
+    "payment": {
+      "paymentStatus": "Payment Status",
+      "unpaid": "Unpaid",
+      "paid": "Paid",
+      "payNow": "Pay Now",
+      "processing": "Processing...",
+      "totalAmount": "Total Amount",
+      "nights": "nights",
+      "perNight": "per night",
+      "instructions": "Payment Instructions:",
+      "sendTo": "Send payment to",
+      "amount": "Amount",
+      "reference": "Reference",
+      "markAsPaid": "Mark as Paid",
+      "markAsPaidNote": "Click this button after you have successfully completed the payment in Vipps",
+      "howToPay": "How to pay:",
+      "step1": "Open the Vipps app on your phone",
+      "step2": "Tap 'Send money' or 'Send penger'",
+      "step3": "Enter the phone number and amount shown above",
+      "step4": "Add the booking reference in the message field (optional)"
     }
   },
   "admin": {
@@ -86,6 +107,8 @@
     "inviteNewUsersManage": "Invite new users and manage user accounts",
     "approve": "Approve",
     "reject": "Reject",
+    "markPaid": "Mark as Paid",
+    "markUnpaid": "Mark as Unpaid",
     "pendingApproval": "Pending Approval",
     "allBookings": "All Bookings",
     "noBookings": "No bookings yet.",
@@ -123,6 +146,14 @@
     "name": "Name",
     "description": "Description",
     "capacity": "Capacity",
+    "nightlyFee": "Nightly Fee",
+    "image": "Image",
+    "cabinImage": "Cabin Image",
+    "imageUploadHint": "PNG, JPG or GIF up to 5MB",
+    "uploadingImage": "Uploading image",
+    "invalidImageType": "File must be an image",
+    "imageTooLarge": "Image must be less than 5MB",
+    "deleteImageConfirm": "Are you sure you want to delete this image?",
     "noCabins": "No cabins yet. Create your first cabin!",
     "addCabin": "Add Cabin"
   },
@@ -146,7 +177,9 @@
     "failedToDeleteUser": "Failed to delete user",
     "cabinAlreadyBooked": "Cabin is already booked for these dates",
     "serviceKeyNotConfigured": "Service role key not configured. Please set SUPABASE_SERVICE_ROLE_KEY in your environment variables, or invite users through the Supabase Dashboard.",
-    "cannotDeleteUsers": "Service role key not configured. Cannot delete users. Please set SUPABASE_SERVICE_ROLE_KEY environment variable or delete through Supabase Dashboard."
+    "cannotDeleteUsers": "Service role key not configured. Cannot delete users. Please set SUPABASE_SERVICE_ROLE_KEY environment variable or delete through Supabase Dashboard.",
+    "failedToInitiatePayment": "Failed to initiate payment",
+    "failedToUpload": "Failed to upload image"
   },
   "success": {
     "bookingCreated": "Booking created successfully",

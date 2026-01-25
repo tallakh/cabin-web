@@ -1,11 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { format } from 'date-fns'
+import { format, differenceInDays } from 'date-fns'
 import { nb } from 'date-fns/locale'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import type { Booking, Cabin } from '@/types/database'
+import PaymentButton from './PaymentButton'
 
 interface BookingCardProps {
   booking: Booking
@@ -143,6 +144,18 @@ export default function BookingCard({ booking, currentUserId, isAdmin, showDelet
     }
   }
 
+  const handlePaymentInitiated = async () => {
+    router.refresh()
+  }
+
+  const calculateNights = () => {
+    const start = new Date(booking.start_date)
+    const end = new Date(booking.end_date)
+    return differenceInDays(end, start) + 1
+  }
+
+  const vippsPhoneNumber = process.env.NEXT_PUBLIC_VIPPS_PHONE_NUMBER || ''
+
   return (
     <div className="bg-white shadow rounded-lg p-6">
       {error && (
@@ -249,7 +262,33 @@ export default function BookingCard({ booking, currentUserId, isAdmin, showDelet
                     <span className="font-medium">{t('bookings.notes')}:</span> {booking.notes}
                   </p>
                 )}
-                <p className="text-xs text-gray-500">
+                {booking.status === 'approved' && booking.payment_amount && booking.payment_amount > 0 && (
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <p className="font-medium text-gray-900 mb-1">
+                      {t('bookings.payment.totalAmount')}: {booking.payment_amount.toFixed(2)} kr
+                    </p>
+                    <p className="text-xs text-gray-600 mb-2">
+                      {calculateNights()} {t('bookings.payment.nights')} × {booking.cabins?.nightly_fee?.toFixed(2) || '0.00'} kr {t('bookings.payment.perNight')}
+                    </p>
+                    <p className="text-xs text-gray-600 mb-2">
+                      <span className="font-medium">{t('bookings.payment.paymentStatus')}:</span>{' '}
+                      <span className={booking.payment_status === 'paid' ? 'text-green-600' : 'text-yellow-600'}>
+                        {t(`bookings.payment.${booking.payment_status}`)}
+                      </span>
+                    </p>
+                    {booking.payment_status === 'unpaid' && booking.user_id === currentUserId && vippsPhoneNumber && (
+                      <div className="mt-2">
+                        <PaymentButton
+                          bookingId={booking.id}
+                          amount={booking.payment_amount}
+                          phoneNumber={vippsPhoneNumber}
+                          onPaymentInitiated={handlePaymentInitiated}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+                <p className="text-xs text-gray-500 mt-2">
                   {t('bookings.created')}: {format(new Date(booking.created_at), 'MMM d, yyyy', { locale: dateLocale })}
                 </p>
               </div>

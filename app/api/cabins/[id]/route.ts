@@ -3,14 +3,15 @@ import { NextResponse } from 'next/server'
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     const { data, error } = await supabase
       .from('cabins')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (error) throw error
@@ -23,9 +24,10 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -44,17 +46,19 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { name, description, capacity } = body
+    const { name, description, capacity, image_url, nightly_fee } = body
 
     const updateData: any = {}
     if (name !== undefined) updateData.name = name
     if (description !== undefined) updateData.description = description
     if (capacity !== undefined) updateData.capacity = capacity
+    if (image_url !== undefined) updateData.image_url = image_url
+    if (nightly_fee !== undefined) updateData.nightly_fee = nightly_fee
 
     const { data, error } = await supabase
       .from('cabins')
       .update(updateData)
-      .eq('id', params.id)
+      .eq('id', id)
       .select()
       .single()
 
@@ -68,9 +72,10 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -91,7 +96,7 @@ export async function DELETE(
     const { error } = await supabase
       .from('cabins')
       .delete()
-      .eq('id', params.id)
+      .eq('id', id)
 
     if (error) throw error
 

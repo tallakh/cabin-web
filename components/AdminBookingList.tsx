@@ -27,6 +27,7 @@ export default function AdminBookingList({ bookings: initialBookings, cabins }: 
     end_date: string
     notes: string
     status: string
+    payment_status?: string
   } | null>(null)
 
   const handleStatusChange = async (bookingId: string, newStatus: 'pending' | 'approved' | 'rejected') => {
@@ -57,6 +58,34 @@ export default function AdminBookingList({ bookings: initialBookings, cabins }: 
     }
   }
 
+  const handlePaymentStatusChange = async (bookingId: string, newPaymentStatus: 'paid' | 'unpaid') => {
+    setLoading(bookingId)
+    setError(null)
+
+    try {
+      const response = await fetch(`/api/bookings/${bookingId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ payment_status: newPaymentStatus }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || t('errors.failedToUpdate'))
+      }
+
+      const updatedBooking = await response.json()
+      setBookings(bookings.map(b => b.id === bookingId ? updatedBooking : b))
+      router.refresh()
+    } catch (err: any) {
+      setError(err.message || t('errors.generic'))
+    } finally {
+      setLoading(null)
+    }
+  }
+
   const handleEdit = (booking: Booking) => {
     setEditingId(booking.id)
     setEditData({
@@ -65,6 +94,7 @@ export default function AdminBookingList({ bookings: initialBookings, cabins }: 
       end_date: booking.end_date,
       notes: booking.notes || '',
       status: booking.status,
+      payment_status: booking.payment_status || 'unpaid',
     })
   }
 
@@ -94,6 +124,7 @@ export default function AdminBookingList({ bookings: initialBookings, cabins }: 
           end_date: editData.end_date,
           notes: editData.notes,
           status: editData.status,
+          payment_status: editData.payment_status,
         }),
       })
 
@@ -285,7 +316,58 @@ export default function AdminBookingList({ bookings: initialBookings, cabins }: 
                                 <span className="font-medium">{t('bookings.notes')}:</span> {booking.notes}
                               </p>
                             )}
-                            <p className="text-xs text-gray-500">
+                            {(booking.status === 'approved' && booking.payment_amount && booking.payment_amount > 0) && (
+                              <div className="mt-2 pt-2 border-t border-gray-200">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <p className="text-sm">
+                                    <span className="font-medium">{t('bookings.payment.paymentStatus')}:</span>{' '}
+                                    <span className={booking.payment_status === 'paid' ? 'text-green-600 font-semibold' : 'text-yellow-600 font-semibold'}>
+                                      {t(`bookings.payment.${booking.payment_status}`)}
+                                    </span>
+                                  </p>
+                                  <button
+                                    onClick={() => handlePaymentStatusChange(booking.id, booking.payment_status === 'paid' ? 'unpaid' : 'paid')}
+                                    disabled={loading === booking.id}
+                                    className={`ml-2 px-2 py-1 text-xs rounded ${
+                                      booking.payment_status === 'paid' 
+                                        ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' 
+                                        : 'bg-green-100 text-green-700 hover:bg-green-200'
+                                    } disabled:opacity-50`}
+                                    title={booking.payment_status === 'paid' ? t('admin.markUnpaid') : t('admin.markPaid')}
+                                  >
+                                    {booking.payment_status === 'paid' ? t('admin.markUnpaid') : t('admin.markPaid')}
+                                  </button>
+                                </div>
+                                <p className="text-sm text-gray-600">
+                                  <span className="font-medium">{t('bookings.payment.totalAmount')}:</span> {booking.payment_amount.toFixed(2)} kr
+                                </p>
+                              </div>
+                            )}
+                            {booking.status === 'approved' && (!booking.payment_amount || booking.payment_amount === 0) && (
+                              <div className="mt-2 pt-2 border-t border-gray-200">
+                                <div className="flex items-center gap-2">
+                                  <p className="text-sm">
+                                    <span className="font-medium">{t('bookings.payment.paymentStatus')}:</span>{' '}
+                                    <span className={booking.payment_status === 'paid' ? 'text-green-600 font-semibold' : 'text-gray-600 font-semibold'}>
+                                      {t(`bookings.payment.${booking.payment_status || 'unpaid'}`)}
+                                    </span>
+                                  </p>
+                                  <button
+                                    onClick={() => handlePaymentStatusChange(booking.id, booking.payment_status === 'paid' ? 'unpaid' : 'paid')}
+                                    disabled={loading === booking.id}
+                                    className={`ml-2 px-2 py-1 text-xs rounded ${
+                                      booking.payment_status === 'paid' 
+                                        ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' 
+                                        : 'bg-green-100 text-green-700 hover:bg-green-200'
+                                    } disabled:opacity-50`}
+                                    title={booking.payment_status === 'paid' ? t('admin.markUnpaid') : t('admin.markPaid')}
+                                  >
+                                    {booking.payment_status === 'paid' ? t('admin.markUnpaid') : t('admin.markPaid')}
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                            <p className="text-xs text-gray-500 mt-2">
                               {t('bookings.requested')}: {format(new Date(booking.created_at), 'MMM d, yyyy', { locale: dateLocale })}
                             </p>
                           </div>
@@ -394,19 +476,34 @@ export default function AdminBookingList({ bookings: initialBookings, cabins }: 
                           className="block w-full rounded-md border-gray-300 shadow-sm bg-white text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                         />
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          {t('bookings.status.status')}
-                        </label>
-                        <select
-                          value={editData?.status || 'pending'}
-                          onChange={(e) => setEditData({ ...editData!, status: e.target.value })}
-                          className="block w-full rounded-md border-gray-300 shadow-sm bg-white text-gray-900 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                        >
-                          <option value="pending">{t('bookings.status.pending')}</option>
-                          <option value="approved">{t('bookings.status.approved')}</option>
-                          <option value="rejected">{t('bookings.status.rejected')}</option>
-                        </select>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            {t('bookings.status.status')}
+                          </label>
+                          <select
+                            value={editData?.status || 'pending'}
+                            onChange={(e) => setEditData({ ...editData!, status: e.target.value })}
+                            className="block w-full rounded-md border-gray-300 shadow-sm bg-white text-gray-900 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                          >
+                            <option value="pending">{t('bookings.status.pending')}</option>
+                            <option value="approved">{t('bookings.status.approved')}</option>
+                            <option value="rejected">{t('bookings.status.rejected')}</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            {t('bookings.payment.paymentStatus')}
+                          </label>
+                          <select
+                            value={editData?.payment_status || 'unpaid'}
+                            onChange={(e) => setEditData({ ...editData!, payment_status: e.target.value })}
+                            className="block w-full rounded-md border-gray-300 shadow-sm bg-white text-gray-900 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                          >
+                            <option value="unpaid">{t('bookings.payment.unpaid')}</option>
+                            <option value="paid">{t('bookings.payment.paid')}</option>
+                          </select>
+                        </div>
                       </div>
                       <div className="flex gap-2">
                         <button
@@ -448,6 +545,35 @@ export default function AdminBookingList({ bookings: initialBookings, cabins }: 
                               <p>
                                 <span className="font-medium">{t('bookings.notes')}:</span> {booking.notes}
                               </p>
+                            )}
+                            {booking.status === 'approved' && (
+                              <div className="mt-2 pt-2 border-t border-gray-200">
+                                <div className="flex items-center gap-2">
+                                  <p className="text-sm">
+                                    <span className="font-medium">{t('bookings.payment.paymentStatus')}:</span>{' '}
+                                    <span className={booking.payment_status === 'paid' ? 'text-green-600 font-semibold' : 'text-yellow-600 font-semibold'}>
+                                      {t(`bookings.payment.${booking.payment_status || 'unpaid'}`)}
+                                    </span>
+                                  </p>
+                                  <button
+                                    onClick={() => handlePaymentStatusChange(booking.id, booking.payment_status === 'paid' ? 'unpaid' : 'paid')}
+                                    disabled={loading === booking.id}
+                                    className={`ml-2 px-2 py-1 text-xs rounded ${
+                                      booking.payment_status === 'paid' 
+                                        ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' 
+                                        : 'bg-green-100 text-green-700 hover:bg-green-200'
+                                    } disabled:opacity-50`}
+                                    title={booking.payment_status === 'paid' ? t('admin.markUnpaid') : t('admin.markPaid')}
+                                  >
+                                    {booking.payment_status === 'paid' ? t('admin.markUnpaid') : t('admin.markPaid')}
+                                  </button>
+                                </div>
+                                {booking.payment_amount && booking.payment_amount > 0 && (
+                                  <p className="text-sm text-gray-600 mt-1">
+                                    <span className="font-medium">{t('bookings.payment.totalAmount')}:</span> {booking.payment_amount.toFixed(2)} kr
+                                  </p>
+                                )}
+                              </div>
                             )}
                           </div>
                         </div>

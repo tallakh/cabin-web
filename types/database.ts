@@ -3,11 +3,14 @@ export type Cabin = {
   name: string
   description: string | null
   capacity: number
+  image_url: string | null
+  nightly_fee: number
   created_at: string
   updated_at: string
 }
 
 export type BookingStatus = 'pending' | 'approved' | 'rejected'
+export type PaymentStatus = 'unpaid' | 'paid'
 
 export type Booking = {
   id: string
@@ -17,6 +20,10 @@ export type Booking = {
   end_date: string
   status: BookingStatus
   notes: string | null
+  payment_status: PaymentStatus
+  payment_amount: number | null
+  vipps_transaction_id: string | null
+  paid_at: string | null
   created_at: string
   updated_at: string
   cabins?: Cabin
