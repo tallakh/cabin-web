@@ -31,7 +31,14 @@
     "signingIn": "Signing in...",
     "inviteOnly": "This is an invite-only service. Contact an admin to get access.",
     "noUserData": "No user data returned",
-    "sessionNotEstablished": "Session not established after login"
+    "sessionNotEstablished": "Session not established after login",
+    "setPassword": "Set your password",
+    "confirmPassword": "Confirm password",
+    "settingPassword": "Setting password...",
+    "passwordSetSuccess": "Password set successfully! Redirecting...",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "sessionError": "Session error. Please try the invite link again."
   },
   "dashboard": {
     "title": "Cabin Booking",

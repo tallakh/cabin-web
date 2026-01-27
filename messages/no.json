@@ -31,7 +31,14 @@
     "signingIn": "Logger inn...",
     "inviteOnly": "Dette er en invitasjonsbasert tjeneste. Kontakt en administrator for å få tilgang.",
     "noUserData": "Ingen brukerdata returnert",
-    "sessionNotEstablished": "Økt ikke etablert etter innlogging"
+    "sessionNotEstablished": "Økt ikke etablert etter innlogging",
+    "setPassword": "Sett ditt passord",
+    "confirmPassword": "Bekreft passord",
+    "settingPassword": "Setter passord...",
+    "passwordSetSuccess": "Passord satt! Omdirigerer...",
+    "passwordTooShort": "Passordet må være minst 6 tegn",
+    "passwordsDoNotMatch": "Passordene stemmer ikke overens",
+    "sessionError": "Øktfeil. Vennligst prøv invitasjonslenken igjen."
   },
   "dashboard": {
     "title": "Hytte Booking",
