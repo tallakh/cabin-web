@@ -38,7 +38,21 @@
     "passwordSetSuccess": "Passord satt! Omdirigerer...",
     "passwordTooShort": "Passordet må være minst 6 tegn",
     "passwordsDoNotMatch": "Passordene stemmer ikke overens",
-    "sessionError": "Øktfeil. Vennligst prøv invitasjonslenken igjen."
+    "sessionError": "Øktfeil. Vennligst prøv invitasjonslenken igjen.",
+    "errors": {
+      "inviteExpired": "Denne invitasjonslenken har utløpt. Vennligst kontakt en administrator for å be om en ny invitasjon.",
+      "inviteInvalid": "Denne invitasjonslenken er ugyldig. Vennligst kontakt en administrator for å be om en ny invitasjon.",
+      "inviteAlreadyUsed": "Denne invitasjonslenken har allerede blitt brukt. Vennligst logg inn med din konto.",
+      "inviteError": "Det oppstod en feil ved verifisering av invitasjonen din. Vennligst kontakt en administrator.",
+      "linkExpired": "Denne autentiseringslenken har utløpt. Vennligst be om en ny.",
+      "linkInvalid": "Denne autentiseringslenken er ugyldig. Vennligst be om en ny.",
+      "linkAlreadyUsed": "Denne autentiseringslenken har allerede blitt brukt.",
+      "authFailed": "Autentisering mislyktes. Vennligst prøv igjen.",
+      "noSession": "Ingen aktiv økt funnet. Vennligst prøv invitasjonslenken igjen."
+    },
+    "messages": {
+      "passwordAlreadySet": "Passordet er allerede satt. Vennligst logg inn med ditt passord."
+    }
   },
   "dashboard": {
     "title": "Hytte Booking",

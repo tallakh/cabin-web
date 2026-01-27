@@ -38,7 +38,21 @@
     "passwordSetSuccess": "Password set successfully! Redirecting...",
     "passwordTooShort": "Password must be at least 6 characters",
     "passwordsDoNotMatch": "Passwords do not match",
-    "sessionError": "Session error. Please try the invite link again."
+    "sessionError": "Session error. Please try the invite link again.",
+    "errors": {
+      "inviteExpired": "This invitation link has expired. Please contact an admin to request a new invitation.",
+      "inviteInvalid": "This invitation link is invalid. Please contact an admin to request a new invitation.",
+      "inviteAlreadyUsed": "This invitation link has already been used. Please log in with your account.",
+      "inviteError": "There was an error verifying your invitation. Please contact an admin.",
+      "linkExpired": "This authentication link has expired. Please request a new one.",
+      "linkInvalid": "This authentication link is invalid. Please request a new one.",
+      "linkAlreadyUsed": "This authentication link has already been used.",
+      "authFailed": "Authentication failed. Please try again.",
+      "noSession": "No active session found. Please try the invitation link again."
+    },
+    "messages": {
+      "passwordAlreadySet": "Password is already set. Please log in with your password."
+    }
   },
   "dashboard": {
     "title": "Cabin Booking",

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 
 export default function LoginPage() {
@@ -12,9 +12,82 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
   const t = useTranslations()
   const locale = useLocale()
+
+  // Check for error messages from URL parameters (e.g., from auth callback)
+  useEffect(() => {
+    const errorParam = searchParams.get('error')
+    const errorDetails = searchParams.get('error_details')
+    const messageParam = searchParams.get('message')
+    
+    if (errorParam) {
+      // Map error codes to user-friendly messages
+      let errorMessage = t('errors.generic')
+      
+      switch (errorParam) {
+        case 'invite_expired':
+          errorMessage = t('auth.errors.inviteExpired') || 'This invitation link has expired. Please contact an admin to request a new invitation.'
+          break
+        case 'invite_invalid':
+          errorMessage = t('auth.errors.inviteInvalid') || 'This invitation link is invalid. Please contact an admin to request a new invitation.'
+          break
+        case 'invite_already_used':
+          errorMessage = t('auth.errors.inviteAlreadyUsed') || 'This invitation link has already been used. Please log in with your account.'
+          break
+        case 'invite_error':
+          errorMessage = t('auth.errors.inviteError') || 'There was an error verifying your invitation. Please contact an admin.'
+          break
+        case 'link_expired':
+          errorMessage = t('auth.errors.linkExpired') || 'This authentication link has expired. Please request a new one.'
+          break
+        case 'link_invalid':
+          errorMessage = t('auth.errors.linkInvalid') || 'This authentication link is invalid. Please request a new one.'
+          break
+        case 'link_already_used':
+          errorMessage = t('auth.errors.linkAlreadyUsed') || 'This authentication link has already been used.'
+          break
+        case 'auth_failed':
+          errorMessage = t('auth.errors.authFailed') || 'Authentication failed. Please try again.'
+          break
+        case 'no_session':
+          errorMessage = t('auth.errors.noSession') || 'No active session found. Please try the invitation link again.'
+          break
+        default:
+          // Use error details if available, otherwise use generic message
+          if (errorDetails) {
+            errorMessage = decodeURIComponent(errorDetails)
+          }
+      }
+      
+      setError(errorMessage)
+      
+      // Clean up URL by removing error parameters
+      const newUrl = new URL(window.location.href)
+      newUrl.searchParams.delete('error')
+      newUrl.searchParams.delete('error_details')
+      window.history.replaceState({}, '', newUrl.toString())
+    }
+    
+    if (messageParam) {
+      let messageText = ''
+      switch (messageParam) {
+        case 'password_already_set':
+          messageText = t('auth.messages.passwordAlreadySet') || 'Password is already set. Please log in with your password.'
+          break
+        default:
+          messageText = messageParam
+      }
+      setMessage(messageText)
+      
+      // Clean up URL
+      const newUrl = new URL(window.location.href)
+      newUrl.searchParams.delete('message')
+      window.history.replaceState({}, '', newUrl.toString())
+    }
+  }, [searchParams, t])
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()

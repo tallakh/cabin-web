@@ -19,6 +19,37 @@ export default function SetPasswordPage() {
   const locale = useLocale()
 
   useEffect(() => {
+    // Check for error parameters in URL (e.g., from direct Supabase verify redirect)
+    const errorParam = searchParams.get('error')
+    const errorDetails = searchParams.get('error_description')
+    
+    if (errorParam || errorDetails) {
+      // Handle errors from Supabase verify endpoint
+      let errorMessage = t('errors.generic')
+      
+      if (errorParam) {
+        switch (errorParam) {
+          case 'expired_token':
+          case 'token_expired':
+            errorMessage = t('auth.errors.inviteExpired') || 'This invitation link has expired. Please contact an admin to request a new invitation.'
+            break
+          case 'invalid_token':
+          case 'token_invalid':
+            errorMessage = t('auth.errors.inviteInvalid') || 'This invitation link is invalid. Please contact an admin to request a new invitation.'
+            break
+          default:
+            errorMessage = errorDetails ? decodeURIComponent(errorDetails) : t('auth.errors.inviteError')
+        }
+      } else if (errorDetails) {
+        errorMessage = decodeURIComponent(errorDetails)
+      }
+      
+      // Redirect to login with error
+      const next = searchParams.get('next') || '/dashboard'
+      router.push(`/${locale}/login?error=invite_error&error_details=${encodeURIComponent(errorMessage)}&next=${encodeURIComponent(next)}`)
+      return
+    }
+
     // Check if user has a session (from invite verification)
     const checkSession = async () => {
       try {
