@@ -61,7 +61,7 @@
     "myBookings": "Mine Bookinger",
     "newBooking": "Ny Booking",
     "admin": "Administrator",
-    "cabinAvailability": "Hytte Tilgjengelighet",
+    "cabinAvailability": "Tilgjengelighet",
     "viewAvailableDates": "Se tilgjengelige datoer for alle hytter. Godkjente og ventende bookinger vises på kalenderen.",
     "viewManageBookings": "Se og administrer dine bookingforespørsler"
   },
