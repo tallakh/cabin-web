@@ -17,22 +17,57 @@ export default function LoginPage() {
   const t = useTranslations()
   const locale = useLocale()
 
+  // Helper function to parse hash parameters
+  const parseHashParams = () => {
+    const hash = window.location.hash.substring(1) // Remove the '#'
+    if (!hash) return {}
+    
+    const params: Record<string, string> = {}
+    hash.split('&').forEach(param => {
+      const [key, value] = param.split('=')
+      if (key && value) {
+        params[key] = decodeURIComponent(value)
+      }
+    })
+    return params
+  }
+
   // Check for error messages from URL parameters (e.g., from auth callback)
+  // Also check hash parameters (Supabase redirects errors in hash)
   useEffect(() => {
+    // Check query parameters first
     const errorParam = searchParams.get('error')
     const errorDetails = searchParams.get('error_details')
     const messageParam = searchParams.get('message')
     
-    if (errorParam) {
+    // Check hash parameters (Supabase uses hash for errors)
+    const hashParams = parseHashParams()
+    const hashError = hashParams.error || hashParams.error_code
+    const hashErrorDescription = hashParams.error_description
+    
+    // Use hash params if query params are not present
+    const finalError = errorParam || hashError
+    const finalErrorDetails = errorDetails || hashErrorDescription
+    
+    if (finalError) {
       // Map error codes to user-friendly messages
       let errorMessage = t('errors.generic')
       
-      switch (errorParam) {
+      switch (finalError) {
         case 'invite_expired':
+        case 'otp_expired':
           errorMessage = t('auth.errors.inviteExpired') || 'This invitation link has expired. Please contact an admin to request a new invitation.'
           break
         case 'invite_invalid':
-          errorMessage = t('auth.errors.inviteInvalid') || 'This invitation link is invalid. Please contact an admin to request a new invitation.'
+        case 'access_denied':
+          // Check if it's specifically an expired OTP
+          if (hashParams.error_code === 'otp_expired' || finalErrorDetails?.toLowerCase().includes('expired')) {
+            errorMessage = t('auth.errors.inviteExpired') || 'This invitation link has expired. Please contact an admin to request a new invitation.'
+          } else if (finalErrorDetails?.toLowerCase().includes('invalid')) {
+            errorMessage = t('auth.errors.inviteInvalid') || 'This invitation link is invalid. Please contact an admin to request a new invitation.'
+          } else {
+            errorMessage = t('auth.errors.inviteInvalid') || 'This invitation link is invalid. Please contact an admin to request a new invitation.'
+          }
           break
         case 'invite_already_used':
           errorMessage = t('auth.errors.inviteAlreadyUsed') || 'This invitation link has already been used. Please log in with your account.'
@@ -57,17 +92,18 @@ export default function LoginPage() {
           break
         default:
           // Use error details if available, otherwise use generic message
-          if (errorDetails) {
-            errorMessage = decodeURIComponent(errorDetails)
+          if (finalErrorDetails) {
+            errorMessage = finalErrorDetails
           }
       }
       
       setError(errorMessage)
       
-      // Clean up URL by removing error parameters
+      // Clean up URL by removing error parameters (both query and hash)
       const newUrl = new URL(window.location.href)
       newUrl.searchParams.delete('error')
       newUrl.searchParams.delete('error_details')
+      newUrl.hash = '' // Remove hash completely
       window.history.replaceState({}, '', newUrl.toString())
     }
     
