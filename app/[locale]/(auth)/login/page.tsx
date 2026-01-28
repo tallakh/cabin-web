@@ -67,7 +67,7 @@ export default function LoginPage() {
             return
           }
 
-          if (!data.session) {
+          if (!data.session || !data.user) {
             setError(t('auth.sessionNotEstablished'))
             setLoading(false)
             // Clean up hash
