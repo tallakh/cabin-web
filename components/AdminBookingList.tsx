@@ -25,6 +25,7 @@ export default function AdminBookingList({ bookings: initialBookings, cabins }: 
     cabin_id: string
     start_date: string
     end_date: string
+    number_of_guests: number
     notes: string
     status: string
     payment_status?: string
@@ -92,6 +93,7 @@ export default function AdminBookingList({ bookings: initialBookings, cabins }: 
       cabin_id: booking.cabin_id,
       start_date: booking.start_date,
       end_date: booking.end_date,
+      number_of_guests: booking.number_of_guests || 1,
       notes: booking.notes || '',
       status: booking.status,
       payment_status: booking.payment_status || 'unpaid',
@@ -122,6 +124,7 @@ export default function AdminBookingList({ bookings: initialBookings, cabins }: 
           cabin_id: editData.cabin_id,
           start_date: editData.start_date,
           end_date: editData.end_date,
+          number_of_guests: editData.number_of_guests || 1,
           notes: editData.notes,
           status: editData.status,
           payment_status: editData.payment_status,
@@ -252,6 +255,18 @@ export default function AdminBookingList({ bookings: initialBookings, cabins }: 
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
+                          {t('bookings.numberOfGuests')} *
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={editData?.number_of_guests || 1}
+                          onChange={(e) => setEditData({ ...editData!, number_of_guests: parseInt(e.target.value, 10) || 1 })}
+                          className="block w-full rounded-md border-gray-300 shadow-sm bg-white text-gray-900 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
                           {t('bookings.notes')} ({t('common.optional')})
                         </label>
                         <textarea
@@ -310,6 +325,10 @@ export default function AdminBookingList({ bookings: initialBookings, cabins }: 
                             <p>
                               <span className="font-medium">{t('bookings.dates')}:</span>{' '}
                               {format(new Date(booking.start_date), 'MMM d, yyyy', { locale: dateLocale })} - {format(new Date(booking.end_date), 'MMM d, yyyy', { locale: dateLocale })}
+                            </p>
+                            <p>
+                              <span className="font-medium">{t('bookings.numberOfGuests')}:</span>{' '}
+                              {booking.number_of_guests || 1} {(booking.number_of_guests || 1) === 1 ? t('bookings.guest') : t('bookings.guests')}
                             </p>
                             {booking.notes && (
                               <p>
@@ -467,6 +486,18 @@ export default function AdminBookingList({ bookings: initialBookings, cabins }: 
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
+                          {t('bookings.numberOfGuests')} *
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={editData?.number_of_guests || 1}
+                          onChange={(e) => setEditData({ ...editData!, number_of_guests: parseInt(e.target.value, 10) || 1 })}
+                          className="block w-full rounded-md border-gray-300 shadow-sm bg-white text-gray-900 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
                           {t('bookings.notes')} ({t('common.optional')})
                         </label>
                         <textarea
@@ -540,6 +571,10 @@ export default function AdminBookingList({ bookings: initialBookings, cabins }: 
                             <p>
                               <span className="font-medium">{t('bookings.dates')}:</span>{' '}
                               {format(new Date(booking.start_date), 'MMM d, yyyy', { locale: dateLocale })} - {format(new Date(booking.end_date), 'MMM d, yyyy', { locale: dateLocale })}
+                            </p>
+                            <p>
+                              <span className="font-medium">{t('bookings.numberOfGuests')}:</span>{' '}
+                              {booking.number_of_guests || 1} {(booking.number_of_guests || 1) === 1 ? t('bookings.guest') : t('bookings.guests')}
                             </p>
                             {booking.notes && (
                               <p>

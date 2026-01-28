@@ -20,6 +20,7 @@ export type Booking = {
   end_date: string
   status: BookingStatus
   notes: string | null
+  number_of_guests: number
   payment_status: PaymentStatus
   payment_amount: number | null
   vipps_transaction_id: string | null

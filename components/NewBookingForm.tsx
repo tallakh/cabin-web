@@ -19,8 +19,11 @@ export default function NewBookingForm({ cabins }: NewBookingFormProps) {
     cabin_id: '',
     start_date: '',
     end_date: '',
+    number_of_guests: 1,
     notes: '',
   })
+
+  const selectedCabin = cabins.find(c => c.id === formData.cabin_id)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -33,6 +36,22 @@ export default function NewBookingForm({ cabins }: NewBookingFormProps) {
       return
     }
 
+    // Validate number of guests
+    const guests = parseInt(formData.number_of_guests.toString(), 10)
+    if (isNaN(guests) || guests < 1) {
+      setError(t('bookings.invalidGuestCount') || 'Number of guests must be at least 1')
+      setLoading(false)
+      return
+    }
+
+    // Check against cabin capacity (client-side validation)
+    if (selectedCabin && guests > selectedCabin.capacity) {
+      setError(t('bookings.guestsExceedCapacity') || `Number of guests (${guests}) exceeds cabin capacity (${selectedCabin.capacity})`)
+      setLoading(false)
+      return
+    }
+
+    // Allow same-day bookings (start_date can equal end_date)
     if (new Date(formData.start_date) > new Date(formData.end_date)) {
       setError(t('bookings.endDateAfterStart'))
       setLoading(false)
@@ -129,9 +148,37 @@ export default function NewBookingForm({ cabins }: NewBookingFormProps) {
               value={formData.end_date}
               onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
               min={formData.start_date || new Date().toISOString().split('T')[0]}
+              // Allow same-day bookings, so end_date can equal start_date
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-white text-gray-900 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             />
           </div>
+        </div>
+
+        <div>
+          <label htmlFor="number_of_guests" className="block text-sm font-medium text-gray-700">
+            {t('bookings.numberOfGuests')} *
+            {selectedCabin && (
+              <span className="ml-2 text-xs text-gray-500">
+                ({t('bookings.capacity')}: {selectedCabin.capacity})
+              </span>
+            )}
+          </label>
+          <input
+            type="number"
+            id="number_of_guests"
+            name="number_of_guests"
+            required
+            min="1"
+            max={selectedCabin?.capacity || 999}
+            value={formData.number_of_guests}
+            onChange={(e) => setFormData({ ...formData, number_of_guests: parseInt(e.target.value, 10) || 1 })}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-white text-gray-900 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          />
+          {selectedCabin && formData.number_of_guests > selectedCabin.capacity && (
+            <p className="mt-1 text-sm text-red-600">
+              {t('bookings.guestsExceedCapacity') || `Number of guests exceeds cabin capacity (${selectedCabin.capacity})`}
+            </p>
+          )}
         </div>
 
         <div>

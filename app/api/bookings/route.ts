@@ -64,10 +64,16 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { cabin_id, start_date, end_date, notes } = body
+    const { cabin_id, start_date, end_date, notes, number_of_guests } = body
 
     if (!cabin_id || !start_date || !end_date) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    // Validate number_of_guests
+    const guests = number_of_guests ? parseInt(number_of_guests, 10) : 1
+    if (isNaN(guests) || guests < 1) {
+      return NextResponse.json({ error: 'Number of guests must be at least 1' }, { status: 400 })
     }
 
     // Validate dates
@@ -82,52 +88,55 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Start date cannot be in the past' }, { status: 400 })
     }
 
+    // Allow same-day bookings (end_date can equal start_date)
     if (end < start) {
-      return NextResponse.json({ error: 'End date must be after start date' }, { status: 400 })
+      return NextResponse.json({ error: 'End date must be on or after start date' }, { status: 400 })
     }
 
-    // Check for overlapping approved bookings (definite conflicts)
+    // Get cabin to check capacity
+    const { data: cabin, error: cabinError } = await supabase
+      .from('cabins')
+      .select('capacity')
+      .eq('id', cabin_id)
+      .single()
+
+    if (cabinError || !cabin) {
+      return NextResponse.json({ error: 'Cabin not found' }, { status: 404 })
+    }
+
+    // Check capacity by summing guests from overlapping approved bookings
     const { data: approvedBookings } = await supabase
       .from('bookings')
-      .select('*')
+      .select('start_date, end_date, number_of_guests')
       .eq('cabin_id', cabin_id)
       .eq('status', 'approved')
 
     if (approvedBookings && approvedBookings.length > 0) {
-      // Check for actual overlap with approved bookings
-      const hasApprovedOverlap = approvedBookings.some(booking => {
-        const bookingStart = new Date(booking.start_date)
-        const bookingEnd = new Date(booking.end_date)
-        // Reset time to compare dates only
-        bookingStart.setHours(0, 0, 0, 0)
-        bookingEnd.setHours(0, 0, 0, 0)
-        return (start <= bookingEnd && end >= bookingStart)
-      })
+      // Find overlapping approved bookings and sum their guests
+      const overlappingGuests = approvedBookings
+        .filter(booking => {
+          const bookingStart = new Date(booking.start_date)
+          const bookingEnd = new Date(booking.end_date)
+          bookingStart.setHours(0, 0, 0, 0)
+          bookingEnd.setHours(23, 59, 59, 999)
+          return (start <= bookingEnd && end >= bookingStart)
+        })
+        .reduce((sum, booking) => sum + (booking.number_of_guests || 1), 0)
 
-      if (hasApprovedOverlap) {
-        return NextResponse.json({ error: 'Cabin is already booked for these dates' }, { status: 400 })
+      // Check if adding this booking would exceed capacity
+      const totalGuests = overlappingGuests + guests
+      if (totalGuests > cabin.capacity) {
+        return NextResponse.json({ 
+          error: `Cabin capacity exceeded. Available space: ${cabin.capacity - overlappingGuests} guests, requested: ${guests} guests` 
+        }, { status: 400 })
       }
-    }
-
-    // Check for overlapping pending bookings (potential conflicts)
-    // Allow these but the admin will see multiple pending requests for the same dates
-    const { data: pendingBookings } = await supabase
-      .from('bookings')
-      .select('*')
-      .eq('cabin_id', cabin_id)
-      .eq('status', 'pending')
-
-    if (pendingBookings && pendingBookings.length > 0) {
-      const hasPendingOverlap = pendingBookings.some(booking => {
-        const bookingStart = new Date(booking.start_date)
-        const bookingEnd = new Date(booking.end_date)
-        bookingStart.setHours(0, 0, 0, 0)
-        bookingEnd.setHours(0, 0, 0, 0)
-        return (start <= bookingEnd && end >= bookingStart)
-      })
-
-      // Note: We allow pending overlaps - the admin will see multiple requests
-      // and can decide which one(s) to approve. This is intentional for flexibility.
+    } else {
+      // No existing bookings, just check if guests exceed capacity
+      if (guests > cabin.capacity) {
+        return NextResponse.json({ 
+          error: `Number of guests (${guests}) exceeds cabin capacity (${cabin.capacity})` 
+        }, { status: 400 })
+      }
     }
 
     const { data: booking, error } = await supabase
@@ -138,6 +147,7 @@ export async function POST(request: Request) {
         start_date,
         end_date,
         notes: notes || null,
+        number_of_guests: guests,
         status: 'pending',
       })
       .select('*, cabins(*)')

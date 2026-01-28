@@ -31,9 +31,15 @@ export default function Calendar({ cabins, bookings, currentUserId, isAdmin }: C
 
   const getBookingsForDate = (date: Date) => {
     return bookings.filter(booking => {
+      // Normalize dates to midnight for accurate date-only comparison
       const start = new Date(booking.start_date)
+      start.setHours(0, 0, 0, 0)
       const end = new Date(booking.end_date)
+      end.setHours(23, 59, 59, 999) // Include the entire end date
       const checkDate = new Date(date)
+      checkDate.setHours(0, 0, 0, 0)
+      
+      // Check if the date falls within the booking range (inclusive of both start and end)
       return checkDate >= start && checkDate <= end && (booking.status === 'approved' || booking.status === 'pending')
     })
   }
@@ -147,17 +153,18 @@ export default function Calendar({ cabins, bookings, currentUserId, isAdmin }: C
                     const baseColor = getCabinColor(booking.cabin_id)
                     const borderStyle = isPending ? 'border-dashed opacity-75' : 'border-solid'
                     const bookerName = booking.user_profiles?.full_name || booking.user_profiles?.email || t('common.user')
+                    const guests = booking.number_of_guests || 1
                     
                     return (
                       <div
                         key={booking.id}
                         className={`text-[10px] sm:text-xs p-0.5 sm:p-1 rounded border ${baseColor} ${borderStyle} group relative`}
-                        title={`${cabin?.name || t('bookings.cabin')}: ${bookerName} (${t(`bookings.status.${booking.status}`)})`}
+                        title={`${cabin?.name || t('bookings.cabin')}: ${bookerName} (${guests} ${guests === 1 ? t('bookings.guest') : t('bookings.guests')}) - ${t(`bookings.status.${booking.status}`)}`}
                       >
                         <div className="font-medium truncate sm:hidden">{bookerName}</div>
                         <div className="font-medium truncate hidden sm:block">{cabin?.name || t('bookings.cabin')}</div>
                         <div className="text-[9px] sm:text-xs truncate text-gray-600 hidden sm:block">
-                          {bookerName}
+                          {bookerName} ({guests})
                         </div>
                         {canDelete && booking.status === 'approved' && (
                           <button

@@ -28,6 +28,7 @@ export default function BookingCard({ booking, currentUserId, isAdmin, showDelet
     cabin_id: booking.cabin_id,
     start_date: booking.start_date,
     end_date: booking.end_date,
+    number_of_guests: booking.number_of_guests || 1,
     notes: booking.notes || '',
   })
   
@@ -51,6 +52,7 @@ export default function BookingCard({ booking, currentUserId, isAdmin, showDelet
       cabin_id: booking.cabin_id,
       start_date: booking.start_date,
       end_date: booking.end_date,
+      number_of_guests: booking.number_of_guests || 1,
       notes: booking.notes || '',
     })
   }
@@ -73,13 +75,16 @@ export default function BookingCard({ booking, currentUserId, isAdmin, showDelet
         editData.start_date !== booking.start_date || 
         editData.end_date !== booking.end_date
 
-      // If dates changed, status should be set to pending
+      // If dates or guests changed, status should be set to pending
       const updateData: any = {
         cabin_id: editData.cabin_id,
         start_date: editData.start_date,
         end_date: editData.end_date,
+        number_of_guests: editData.number_of_guests,
         notes: editData.notes,
       }
+      
+      const guestsChanged = editData.number_of_guests !== (booking.number_of_guests || 1)
 
       if (datesChanged) {
         updateData.status = 'pending'
@@ -114,6 +119,7 @@ export default function BookingCard({ booking, currentUserId, isAdmin, showDelet
       cabin_id: booking.cabin_id,
       start_date: booking.start_date,
       end_date: booking.end_date,
+      number_of_guests: booking.number_of_guests || 1,
       notes: booking.notes || '',
     })
   }
@@ -209,6 +215,19 @@ export default function BookingCard({ booking, currentUserId, isAdmin, showDelet
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t('bookings.numberOfGuests')} *
+            </label>
+            <input
+              type="number"
+              min="1"
+              max={booking.cabins?.capacity || 999}
+              value={editData.number_of_guests}
+              onChange={(e) => setEditData({ ...editData, number_of_guests: parseInt(e.target.value, 10) || 1 })}
+              className="block w-full rounded-md border-gray-300 shadow-sm bg-white text-gray-900 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               {t('bookings.notes')} ({t('common.optional')})
             </label>
             <textarea
@@ -218,7 +237,7 @@ export default function BookingCard({ booking, currentUserId, isAdmin, showDelet
               className="block w-full rounded-md border-gray-300 shadow-sm bg-white text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             />
           </div>
-          {(editData.start_date !== booking.start_date || editData.end_date !== booking.end_date) && (
+          {(editData.start_date !== booking.start_date || editData.end_date !== booking.end_date || editData.number_of_guests !== (booking.number_of_guests || 1)) && (
             <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded text-sm">
               {t('bookings.dateChangeRequiresApproval')}
             </div>
@@ -256,6 +275,10 @@ export default function BookingCard({ booking, currentUserId, isAdmin, showDelet
                 <p>
                   <span className="font-medium">{t('bookings.dates')}:</span>{' '}
                   {format(new Date(booking.start_date), 'MMM d, yyyy', { locale: dateLocale })} - {format(new Date(booking.end_date), 'MMM d, yyyy', { locale: dateLocale })}
+                </p>
+                <p>
+                  <span className="font-medium">{t('bookings.numberOfGuests')}:</span>{' '}
+                  {booking.number_of_guests || 1} {(booking.number_of_guests || 1) === 1 ? t('bookings.guest') : t('bookings.guests')}
                 </p>
                 {booking.notes && (
                   <p>

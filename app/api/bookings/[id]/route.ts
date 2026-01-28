@@ -94,11 +94,20 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { status, start_date, end_date, notes, cabin_id, payment_status } = body
+    const { status, start_date, end_date, notes, cabin_id, payment_status, number_of_guests } = body
 
-    // Check if dates are being changed
+    // Check if dates or guests are being changed
     const datesChanged = (start_date && start_date !== existingBooking.start_date) || 
                         (end_date && end_date !== existingBooking.end_date)
+    const guestsChanged = number_of_guests !== undefined && number_of_guests !== (existingBooking.number_of_guests || 1)
+    
+    // Validate number_of_guests if provided
+    if (number_of_guests !== undefined) {
+      const guests = parseInt(number_of_guests.toString(), 10)
+      if (isNaN(guests) || guests < 1) {
+        return NextResponse.json({ error: 'Number of guests must be at least 1' }, { status: 400 })
+      }
+    }
 
     // Only admins can change status, cabin, and payment_status directly
     if (status && !isAdmin) {
@@ -111,10 +120,70 @@ export async function PATCH(
       return NextResponse.json({ error: 'Only admins can change payment status' }, { status: 403 })
     }
 
+    // Check capacity if dates or guests are being changed
+    const finalStartDate = start_date || existingBooking.start_date
+    const finalEndDate = end_date || existingBooking.end_date
+    const finalCabinId = cabin_id || existingBooking.cabin_id
+    const finalGuests = number_of_guests !== undefined ? parseInt(number_of_guests.toString(), 10) : (existingBooking.number_of_guests || 1)
+    
+    if (datesChanged || guestsChanged || cabin_id) {
+      // Get cabin to check capacity
+      const { data: cabin, error: cabinError } = await supabase
+        .from('cabins')
+        .select('capacity')
+        .eq('id', finalCabinId)
+        .single()
+
+      if (cabinError || !cabin) {
+        return NextResponse.json({ error: 'Cabin not found' }, { status: 404 })
+      }
+
+      // Check capacity by summing guests from overlapping approved bookings (excluding current booking)
+      const { data: approvedBookings } = await supabase
+        .from('bookings')
+        .select('start_date, end_date, number_of_guests')
+        .eq('cabin_id', finalCabinId)
+        .eq('status', 'approved')
+        .neq('id', id) // Exclude current booking
+
+      if (approvedBookings && approvedBookings.length > 0) {
+        const start = new Date(finalStartDate)
+        const end = new Date(finalEndDate)
+        start.setHours(0, 0, 0, 0)
+        end.setHours(23, 59, 59, 999)
+
+        // Find overlapping approved bookings and sum their guests
+        const overlappingGuests = approvedBookings
+          .filter(booking => {
+            const bookingStart = new Date(booking.start_date)
+            const bookingEnd = new Date(booking.end_date)
+            bookingStart.setHours(0, 0, 0, 0)
+            bookingEnd.setHours(23, 59, 59, 999)
+            return (start <= bookingEnd && end >= bookingStart)
+          })
+          .reduce((sum, booking) => sum + (booking.number_of_guests || 1), 0)
+
+        // Check if adding this booking would exceed capacity
+        const totalGuests = overlappingGuests + finalGuests
+        if (totalGuests > cabin.capacity) {
+          return NextResponse.json({ 
+            error: `Cabin capacity exceeded. Available space: ${cabin.capacity - overlappingGuests} guests, requested: ${finalGuests} guests` 
+          }, { status: 400 })
+        }
+      } else {
+        // No existing bookings, just check if guests exceed capacity
+        if (finalGuests > cabin.capacity) {
+          return NextResponse.json({ 
+            error: `Number of guests (${finalGuests}) exceeds cabin capacity (${cabin.capacity})` 
+          }, { status: 400 })
+        }
+      }
+    }
+
     const updateData: any = {}
     
-    // If user (non-admin) changes dates, automatically set status to pending
-    if (isOwner && !isAdmin && datesChanged) {
+    // If user (non-admin) changes dates or guests, automatically set status to pending
+    if (isOwner && !isAdmin && (datesChanged || guestsChanged)) {
       updateData.status = 'pending'
       updateData.payment_status = 'unpaid'
       updateData.payment_amount = null
@@ -152,6 +221,7 @@ export async function PATCH(
     if (cabin_id && isAdmin) updateData.cabin_id = cabin_id
     if (start_date) updateData.start_date = start_date
     if (end_date) updateData.end_date = end_date
+    if (number_of_guests !== undefined) updateData.number_of_guests = finalGuests
     if (notes !== undefined) updateData.notes = notes
     if (payment_status && isAdmin) updateData.payment_status = payment_status
 
