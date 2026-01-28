@@ -32,16 +32,104 @@ export default function LoginPage() {
     return params
   }
 
-  // Check for error messages from URL parameters (e.g., from auth callback)
-  // Also check hash parameters (Supabase redirects errors in hash)
+  // Check for magic link authentication (access_token in hash)
+  // Also check for error messages from URL parameters (e.g., from auth callback)
   useEffect(() => {
+    // Handle magic link authentication (implicit flow with access_token in hash)
+    const hashParams = parseHashParams()
+    const accessToken = hashParams.access_token
+    const refreshToken = hashParams.refresh_token
+    const tokenType = hashParams.token_type || 'bearer'
+    const expiresIn = hashParams.expires_in
+    const expiresAt = hashParams.expires_at
+    
+    if (accessToken && hashParams.type === 'magiclink') {
+      // Magic link authentication - establish session
+      const handleMagicLinkAuth = async () => {
+        try {
+          setLoading(true)
+          setError(null)
+          setMessage(null)
+          
+          // Create session from tokens
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken || '',
+          })
+
+          if (error) {
+            setError(error.message || t('auth.errors.authFailed'))
+            setLoading(false)
+            // Clean up hash
+            const newUrl = new URL(window.location.href)
+            newUrl.hash = ''
+            window.history.replaceState({}, '', newUrl.toString())
+            return
+          }
+
+          if (!data.session) {
+            setError(t('auth.sessionNotEstablished'))
+            setLoading(false)
+            // Clean up hash
+            const newUrl = new URL(window.location.href)
+            newUrl.hash = ''
+            window.history.replaceState({}, '', newUrl.toString())
+            return
+          }
+
+          // Check if user profile exists, create if not
+          const { data: profile, error: profileError } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('id', data.user.id)
+            .single()
+
+          if (profileError && profileError.code === 'PGRST116') {
+            // Profile doesn't exist, create it
+            const { error: insertError } = await supabase.from('user_profiles').insert({
+              id: data.user.id,
+              email: data.user.email || '',
+              full_name: data.user.user_metadata?.full_name || data.user.email?.split('@')[0] || 'User',
+              is_admin: false,
+            })
+
+            if (insertError) {
+              // Don't throw - profile might be created by trigger or might already exist
+            }
+          }
+
+          // Clean up hash
+          const newUrl = new URL(window.location.href)
+          newUrl.hash = ''
+          window.history.replaceState({}, '', newUrl.toString())
+
+          // Wait a moment to ensure cookies are written
+          await new Promise(resolve => setTimeout(resolve, 200))
+
+          // Redirect to dashboard
+          window.location.href = `/${locale}/dashboard`
+        } catch (err: any) {
+          setError(err.message || t('errors.generic'))
+          // Clean up hash
+          const newUrl = new URL(window.location.href)
+          newUrl.hash = ''
+          window.history.replaceState({}, '', newUrl.toString())
+        }
+      }
+
+      handleMagicLinkAuth()
+      return // Don't process errors if we're handling magic link auth
+    }
+
+    // Check for error messages from URL parameters (e.g., from auth callback)
+    // Also check hash parameters (Supabase redirects errors in hash)
     // Check query parameters first
     const errorParam = searchParams.get('error')
     const errorDetails = searchParams.get('error_details')
     const messageParam = searchParams.get('message')
     
     // Check hash parameters (Supabase uses hash for errors)
-    const hashParams = parseHashParams()
+    // Only check for errors if we're not handling magic link auth
     const hashError = hashParams.error || hashParams.error_code
     const hashErrorDescription = hashParams.error_description
     
@@ -123,7 +211,7 @@ export default function LoginPage() {
       newUrl.searchParams.delete('message')
       window.history.replaceState({}, '', newUrl.toString())
     }
-  }, [searchParams, t])
+  }, [searchParams, t, supabase, locale])
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
