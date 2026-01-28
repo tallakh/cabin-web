@@ -1,79 +1,86 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { format, differenceInDays } from 'date-fns'
-import { nb } from 'date-fns/locale'
-import { useRouter } from 'next/navigation'
-import { useTranslations, useLocale } from 'next-intl'
-import type { Booking, Cabin } from '@/types/database'
-import PaymentButton from './PaymentButton'
+import { useState } from "react";
+import { format, differenceInDays } from "date-fns";
+import { nb } from "date-fns/locale";
+import { useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
+import type { Booking, Cabin } from "@/types/database";
+import PaymentButton from "./PaymentButton";
 
 interface BookingCardProps {
-  booking: Booking
-  currentUserId?: string
-  isAdmin?: boolean
-  showDelete?: boolean
-  cabins?: Cabin[]
+  booking: Booking;
+  currentUserId?: string;
+  isAdmin?: boolean;
+  showDelete?: boolean;
+  cabins?: Cabin[];
 }
 
-export default function BookingCard({ booking, currentUserId, isAdmin, showDelete = true, cabins = [] }: BookingCardProps) {
-  const router = useRouter()
-  const t = useTranslations()
-  const locale = useLocale()
-  const dateLocale = locale === 'no' ? nb : undefined
-  const [isEditing, setIsEditing] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+export default function BookingCard({
+  booking,
+  currentUserId,
+  isAdmin,
+  showDelete = true,
+  cabins = [],
+}: BookingCardProps) {
+  const router = useRouter();
+  const t = useTranslations();
+  const locale = useLocale();
+  const dateLocale = locale === "no" ? nb : undefined;
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [editData, setEditData] = useState({
     cabin_id: booking.cabin_id,
     start_date: booking.start_date,
     end_date: booking.end_date,
     number_of_guests: booking.number_of_guests || 1,
-    notes: booking.notes || '',
-  })
-  
+    notes: booking.notes || "",
+  });
+
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'approved':
-        return 'bg-green-100 text-green-800'
-      case 'rejected':
-        return 'bg-red-100 text-red-800'
+      case "approved":
+        return "bg-green-100 text-green-800";
+      case "rejected":
+        return "bg-red-100 text-red-800";
       default:
-        return 'bg-yellow-100 text-yellow-800'
+        return "bg-yellow-100 text-yellow-800";
     }
-  }
+  };
 
-  const canDelete = showDelete && (isAdmin || booking.user_id === currentUserId)
-  const canEdit = booking.user_id === currentUserId
+  const canDelete =
+    showDelete && (isAdmin || booking.user_id === currentUserId);
+  const canEdit = booking.user_id === currentUserId;
 
   const handleEdit = () => {
-    setIsEditing(true)
+    setIsEditing(true);
     setEditData({
       cabin_id: booking.cabin_id,
       start_date: booking.start_date,
       end_date: booking.end_date,
       number_of_guests: booking.number_of_guests || 1,
-      notes: booking.notes || '',
-    })
-  }
+      notes: booking.notes || "",
+    });
+  };
 
   const handleSave = async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     try {
       if (!editData.cabin_id || !editData.start_date || !editData.end_date) {
-        throw new Error(t('bookings.fillRequiredFields'))
+        throw new Error(t("bookings.fillRequiredFields"));
       }
 
       if (new Date(editData.start_date) > new Date(editData.end_date)) {
-        throw new Error(t('bookings.endDateAfterStart'))
+        throw new Error(t("bookings.endDateAfterStart"));
       }
 
       // Check if dates changed
-      const datesChanged = 
-        editData.start_date !== booking.start_date || 
-        editData.end_date !== booking.end_date
+      const datesChanged =
+        editData.start_date !== booking.start_date ||
+        editData.end_date !== booking.end_date;
 
       // If dates or guests changed, status should be set to pending
       const updateData: any = {
@@ -82,85 +89,87 @@ export default function BookingCard({ booking, currentUserId, isAdmin, showDelet
         end_date: editData.end_date,
         number_of_guests: editData.number_of_guests,
         notes: editData.notes,
-      }
-      
-      const guestsChanged = editData.number_of_guests !== (booking.number_of_guests || 1)
+      };
+
+      const guestsChanged =
+        editData.number_of_guests !== (booking.number_of_guests || 1);
 
       if (datesChanged) {
-        updateData.status = 'pending'
+        updateData.status = "pending";
       }
 
       const response = await fetch(`/api/bookings/${booking.id}`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(updateData),
-      })
+      });
 
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || t('errors.failedToUpdate'))
+        const data = await response.json();
+        throw new Error(data.error || t("errors.failedToUpdate"));
       }
 
-      router.refresh()
-      setIsEditing(false)
+      router.refresh();
+      setIsEditing(false);
     } catch (err: any) {
-      setError(err.message || t('errors.generic'))
+      setError(err.message || t("errors.generic"));
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleCancel = () => {
-    setIsEditing(false)
-    setError(null)
+    setIsEditing(false);
+    setError(null);
     setEditData({
       cabin_id: booking.cabin_id,
       start_date: booking.start_date,
       end_date: booking.end_date,
       number_of_guests: booking.number_of_guests || 1,
-      notes: booking.notes || '',
-    })
-  }
+      notes: booking.notes || "",
+    });
+  };
 
   const handleDelete = async () => {
-    if (!confirm(t('admin.deleteBookingConfirm'))) {
-      return
+    if (!confirm(t("admin.deleteBookingConfirm"))) {
+      return;
     }
 
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     try {
       const response = await fetch(`/api/bookings/${booking.id}`, {
-        method: 'DELETE',
-      })
+        method: "DELETE",
+      });
 
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || t('errors.failedToDelete'))
+        const data = await response.json();
+        throw new Error(data.error || t("errors.failedToDelete"));
       }
 
-      router.refresh()
+      router.refresh();
     } catch (error: any) {
-      setError(error.message || t('errors.generic'))
+      setError(error.message || t("errors.generic"));
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handlePaymentInitiated = async () => {
-    router.refresh()
-  }
+    router.refresh();
+  };
 
   const calculateNights = () => {
-    const start = new Date(booking.start_date)
-    const end = new Date(booking.end_date)
-    return differenceInDays(end, start) + 1
-  }
+    const start = new Date(booking.start_date);
+    const end = new Date(booking.end_date);
+    // Calculate nights: end_date is checkout day (you don't stay that night)
+    return differenceInDays(end, start);
+  };
 
-  const vippsPhoneNumber = process.env.NEXT_PUBLIC_VIPPS_PHONE_NUMBER || ''
+  const vippsPhoneNumber = process.env.NEXT_PUBLIC_VIPPS_PHONE_NUMBER || "";
 
   return (
     <div className="bg-white shadow rounded-lg p-6">
@@ -174,14 +183,16 @@ export default function BookingCard({ booking, currentUserId, isAdmin, showDelet
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t('bookings.cabin')} *
+              {t("bookings.cabin")} *
             </label>
             <select
               value={editData.cabin_id}
-              onChange={(e) => setEditData({ ...editData, cabin_id: e.target.value })}
+              onChange={(e) =>
+                setEditData({ ...editData, cabin_id: e.target.value })
+              }
               className="block w-full rounded-md border-gray-300 shadow-sm bg-white text-gray-900 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             >
-              {cabins.map(cabin => (
+              {cabins.map((cabin) => (
                 <option key={cabin.id} value={cabin.id}>
                   {cabin.name}
                 </option>
@@ -191,23 +202,27 @@ export default function BookingCard({ booking, currentUserId, isAdmin, showDelet
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t('bookings.startDate')} *
+                {t("bookings.startDate")} *
               </label>
               <input
                 type="date"
                 value={editData.start_date}
-                onChange={(e) => setEditData({ ...editData, start_date: e.target.value })}
+                onChange={(e) =>
+                  setEditData({ ...editData, start_date: e.target.value })
+                }
                 className="block w-full rounded-md border-gray-300 shadow-sm bg-white text-gray-900 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t('bookings.endDate')} *
+                {t("bookings.endDate")} *
               </label>
               <input
                 type="date"
                 value={editData.end_date}
-                onChange={(e) => setEditData({ ...editData, end_date: e.target.value })}
+                onChange={(e) =>
+                  setEditData({ ...editData, end_date: e.target.value })
+                }
                 min={editData.start_date}
                 className="block w-full rounded-md border-gray-300 shadow-sm bg-white text-gray-900 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
               />
@@ -215,31 +230,40 @@ export default function BookingCard({ booking, currentUserId, isAdmin, showDelet
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t('bookings.numberOfGuests')} *
+              {t("bookings.numberOfGuests")} *
             </label>
             <input
               type="number"
               min="1"
               max={booking.cabins?.capacity || 999}
               value={editData.number_of_guests}
-              onChange={(e) => setEditData({ ...editData, number_of_guests: parseInt(e.target.value, 10) || 1 })}
+              onChange={(e) =>
+                setEditData({
+                  ...editData,
+                  number_of_guests: parseInt(e.target.value, 10) || 1,
+                })
+              }
               className="block w-full rounded-md border-gray-300 shadow-sm bg-white text-gray-900 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t('bookings.notes')} ({t('common.optional')})
+              {t("bookings.notes")} ({t("common.optional")})
             </label>
             <textarea
               value={editData.notes}
-              onChange={(e) => setEditData({ ...editData, notes: e.target.value })}
+              onChange={(e) =>
+                setEditData({ ...editData, notes: e.target.value })
+              }
               rows={3}
               className="block w-full rounded-md border-gray-300 shadow-sm bg-white text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             />
           </div>
-          {(editData.start_date !== booking.start_date || editData.end_date !== booking.end_date || editData.number_of_guests !== (booking.number_of_guests || 1)) && (
+          {(editData.start_date !== booking.start_date ||
+            editData.end_date !== booking.end_date ||
+            editData.number_of_guests !== (booking.number_of_guests || 1)) && (
             <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded text-sm">
-              {t('bookings.dateChangeRequiresApproval')}
+              {t("bookings.dateChangeRequiresApproval")}
             </div>
           )}
           <div className="flex gap-2">
@@ -248,14 +272,14 @@ export default function BookingCard({ booking, currentUserId, isAdmin, showDelet
               disabled={loading}
               className="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
             >
-              {loading ? t('common.loading') : t('common.save')}
+              {loading ? t("common.loading") : t("common.save")}
             </button>
             <button
               onClick={handleCancel}
               disabled={loading}
               className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
             >
-              {t('common.cancel')}
+              {t("common.cancel")}
             </button>
           </div>
         </div>
@@ -265,54 +289,86 @@ export default function BookingCard({ booking, currentUserId, isAdmin, showDelet
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <h3 className="text-lg font-semibold text-gray-900">
-                  {booking.cabins?.name || t('bookings.cabin')}
+                  {booking.cabins?.name || t("bookings.cabin")}
                 </h3>
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(booking.status)}`}>
+                <span
+                  className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(booking.status)}`}
+                >
                   {t(`bookings.status.${booking.status}`)}
                 </span>
               </div>
               <div className="text-sm text-gray-600 space-y-1">
                 <p>
-                  <span className="font-medium">{t('bookings.dates')}:</span>{' '}
-                  {format(new Date(booking.start_date), 'MMM d, yyyy', { locale: dateLocale })} - {format(new Date(booking.end_date), 'MMM d, yyyy', { locale: dateLocale })}
+                  <span className="font-medium">{t("bookings.dates")}:</span>{" "}
+                  {format(new Date(booking.start_date), "MMM d, yyyy", {
+                    locale: dateLocale,
+                  })}{" "}
+                  -{" "}
+                  {format(new Date(booking.end_date), "MMM d, yyyy", {
+                    locale: dateLocale,
+                  })}
                 </p>
                 <p>
-                  <span className="font-medium">{t('bookings.numberOfGuests')}:</span>{' '}
-                  {booking.number_of_guests || 1} {(booking.number_of_guests || 1) === 1 ? t('bookings.guest') : t('bookings.guests')}
+                  <span className="font-medium">
+                    {t("bookings.numberOfGuests")}:
+                  </span>{" "}
+                  {booking.number_of_guests || 1}{" "}
+                  {(booking.number_of_guests || 1) === 1
+                    ? t("bookings.guest")
+                    : t("bookings.guests")}
                 </p>
                 {booking.notes && (
                   <p>
-                    <span className="font-medium">{t('bookings.notes')}:</span> {booking.notes}
+                    <span className="font-medium">{t("bookings.notes")}:</span>{" "}
+                    {booking.notes}
                   </p>
                 )}
-                {booking.status === 'approved' && booking.payment_amount && booking.payment_amount > 0 && (
-                  <div className="mt-3 pt-3 border-t border-gray-200">
-                    <p className="font-medium text-gray-900 mb-1">
-                      {t('bookings.payment.totalAmount')}: {booking.payment_amount.toFixed(2)} kr
-                    </p>
-                    <p className="text-xs text-gray-600 mb-2">
-                      {calculateNights()} {t('bookings.payment.nights')} × {booking.cabins?.nightly_fee?.toFixed(2) || '0.00'} kr {t('bookings.payment.perNight')}
-                    </p>
-                    <p className="text-xs text-gray-600 mb-2">
-                      <span className="font-medium">{t('bookings.payment.paymentStatus')}:</span>{' '}
-                      <span className={booking.payment_status === 'paid' ? 'text-green-600' : 'text-yellow-600'}>
-                        {t(`bookings.payment.${booking.payment_status}`)}
-                      </span>
-                    </p>
-                    {booking.payment_status === 'unpaid' && booking.user_id === currentUserId && vippsPhoneNumber && (
-                      <div className="mt-2">
-                        <PaymentButton
-                          bookingId={booking.id}
-                          amount={booking.payment_amount}
-                          phoneNumber={vippsPhoneNumber}
-                          onPaymentInitiated={handlePaymentInitiated}
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
+                {booking.status === "approved" &&
+                  booking.payment_amount &&
+                  booking.payment_amount > 0 && (
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <p className="font-medium text-gray-900 mb-1">
+                        {t("bookings.payment.totalAmount")}:{" "}
+                        {booking.payment_amount.toFixed(2)} kr
+                      </p>
+                      <p className="text-xs text-gray-600 mb-2">
+                        {calculateNights()} {t("bookings.payment.nights")} ×{" "}
+                        {booking.cabins?.nightly_fee?.toFixed(2) || "0.00"} kr{" "}
+                        {t("bookings.payment.perNight")}
+                      </p>
+                      <p className="text-xs text-gray-600 mb-2">
+                        <span className="font-medium">
+                          {t("bookings.payment.paymentStatus")}:
+                        </span>{" "}
+                        <span
+                          className={
+                            booking.payment_status === "paid"
+                              ? "text-green-600"
+                              : "text-yellow-600"
+                          }
+                        >
+                          {t(`bookings.payment.${booking.payment_status}`)}
+                        </span>
+                      </p>
+                      {booking.payment_status === "unpaid" &&
+                        booking.user_id === currentUserId &&
+                        vippsPhoneNumber && (
+                          <div className="mt-2">
+                            <PaymentButton
+                              bookingId={booking.id}
+                              amount={booking.payment_amount}
+                              phoneNumber={vippsPhoneNumber}
+                              onPaymentInitiated={handlePaymentInitiated}
+                            />
+                          </div>
+                        )}
+                    </div>
+                  )}
                 <p className="text-xs text-gray-500 mt-2">
-                  {t('bookings.created')}: {format(new Date(booking.created_at), 'MMM d, yyyy', { locale: dateLocale })}
+                  {t("bookings.created")}:{" "}
+                  {format(new Date(booking.created_at), "MMM d, yyyy", {
+                    locale: dateLocale,
+                  })}
                 </p>
               </div>
             </div>
@@ -323,7 +379,7 @@ export default function BookingCard({ booking, currentUserId, isAdmin, showDelet
                   disabled={loading}
                   className="px-3 py-1 text-sm text-indigo-600 hover:text-indigo-800 border border-indigo-300 rounded hover:bg-indigo-50 disabled:opacity-50"
                 >
-                  {t('common.edit')}
+                  {t("common.edit")}
                 </button>
               )}
               {canDelete && (
@@ -332,7 +388,7 @@ export default function BookingCard({ booking, currentUserId, isAdmin, showDelet
                   disabled={loading}
                   className="px-3 py-1 text-sm text-red-600 hover:text-red-800 border border-red-300 rounded hover:bg-red-50 disabled:opacity-50"
                 >
-                  {t('common.delete')}
+                  {t("common.delete")}
                 </button>
               )}
             </div>
@@ -340,5 +396,5 @@ export default function BookingCard({ booking, currentUserId, isAdmin, showDelet
         </>
       )}
     </div>
-  )
+  );
 }
