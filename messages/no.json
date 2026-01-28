@@ -33,6 +33,7 @@
     "noUserData": "Ingen brukerdata returnert",
     "sessionNotEstablished": "Økt ikke etablert etter innlogging",
     "setPassword": "Sett ditt passord",
+    "resetPassword": "Tilbakestill passordet ditt",
     "confirmPassword": "Bekreft passord",
     "settingPassword": "Setter passord...",
     "passwordSetSuccess": "Passord satt! Omdirigerer...",

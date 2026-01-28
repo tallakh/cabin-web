@@ -223,7 +223,9 @@ export default function SetPasswordPage() {
             {t('auth.title')}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            {t('auth.setPassword')}
+            {searchParams.get('type') === 'recovery' 
+              ? (t('auth.resetPassword') || 'Reset your password')
+              : t('auth.setPassword')}
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSetPassword}>

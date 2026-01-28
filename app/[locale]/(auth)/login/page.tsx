@@ -35,15 +35,73 @@ export default function LoginPage() {
   // Check for magic link authentication (access_token in hash)
   // Also check for error messages from URL parameters (e.g., from auth callback)
   useEffect(() => {
-    // Handle magic link authentication (implicit flow with access_token in hash)
+    // Handle magic link and password reset authentication (implicit flow with access_token in hash)
     const hashParams = parseHashParams()
     const accessToken = hashParams.access_token
     const refreshToken = hashParams.refresh_token
-    const tokenType = hashParams.token_type || 'bearer'
-    const expiresIn = hashParams.expires_in
-    const expiresAt = hashParams.expires_at
+    const tokenType = hashParams.type
     
-    if (accessToken && hashParams.type === 'magiclink') {
+    // Handle password reset (recovery) - redirect to set-password page
+    if (accessToken && tokenType === 'recovery') {
+      // Establish session from recovery token, then redirect to set-password
+      const handlePasswordReset = async () => {
+        try {
+          setLoading(true)
+          setError(null)
+          setMessage(null)
+          
+          // Create session from tokens
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken || '',
+          })
+
+          if (error) {
+            setError(error.message || t('auth.errors.authFailed'))
+            setLoading(false)
+            // Clean up hash
+            const newUrl = new URL(window.location.href)
+            newUrl.hash = ''
+            window.history.replaceState({}, '', newUrl.toString())
+            return
+          }
+
+          if (!data.session || !data.user) {
+            setError(t('auth.sessionNotEstablished'))
+            setLoading(false)
+            // Clean up hash
+            const newUrl = new URL(window.location.href)
+            newUrl.hash = ''
+            window.history.replaceState({}, '', newUrl.toString())
+            return
+          }
+
+          // Clean up hash
+          const newUrl = new URL(window.location.href)
+          newUrl.hash = ''
+          window.history.replaceState({}, '', newUrl.toString())
+
+          // Wait a moment to ensure cookies are written
+          await new Promise(resolve => setTimeout(resolve, 200))
+
+          // Redirect to set-password page for password reset
+          window.location.href = `/${locale}/set-password?type=recovery`
+        } catch (err: any) {
+          setError(err.message || t('errors.generic'))
+          setLoading(false)
+          // Clean up hash
+          const newUrl = new URL(window.location.href)
+          newUrl.hash = ''
+          window.history.replaceState({}, '', newUrl.toString())
+        }
+      }
+
+      handlePasswordReset()
+      return // Don't process errors if we're handling password reset
+    }
+    
+    // Handle magic link authentication
+    if (accessToken && tokenType === 'magiclink') {
       // Magic link authentication - establish session
       const handleMagicLinkAuth = async () => {
         try {

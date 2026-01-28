@@ -33,6 +33,7 @@
     "noUserData": "No user data returned",
     "sessionNotEstablished": "Session not established after login",
     "setPassword": "Set your password",
+    "resetPassword": "Reset your password",
     "confirmPassword": "Confirm password",
     "settingPassword": "Setting password...",
     "passwordSetSuccess": "Password set successfully! Redirecting...",
