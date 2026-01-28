@@ -38,7 +38,7 @@ export async function updateSession(request: NextRequest) {
   // Extract locale from pathname if present
   const pathname = request.nextUrl.pathname
   const localeMatch = pathname.match(/^\/(en|no)(\/|$)/)
-  const locale = localeMatch ? localeMatch[1] : 'en'
+  const locale = localeMatch ? localeMatch[1] : 'no'
   
   if (
     !user &&

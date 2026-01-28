@@ -10,7 +10,7 @@ export function generateStaticParams() {
 }
 
 export const metadata: Metadata = {
-  title: 'Cabin Booking Service',
+  title: 'Steens hytter',
   description: 'Family cabin booking system',
 }
 

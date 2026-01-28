@@ -63,7 +63,7 @@ export default async function DashboardLayout({
             <div className="flex items-center min-w-0 flex-1">
               <div className="flex-shrink-0 flex items-center">
                 <Link href={`/${locale}/dashboard`} className="text-lg sm:text-xl font-bold text-indigo-600 truncate">
-                  {locale === 'no' ? 'Hytte Booking' : 'Cabin Booking'}
+                  {locale === 'no' ? 'Steens hytter' : 'Steens cabins'}
                 </Link>
               </div>
               <div className="hidden md:ml-6 md:flex md:space-x-4 lg:space-x-8">

@@ -24,7 +24,7 @@
     "unknown": "Unknown"
   },
   "auth": {
-    "title": "Cabin Booking Service",
+    "title": "Steens cabins",
     "signInToAccount": "Sign in to your account",
     "emailAddress": "Email address",
     "password": "Password",
@@ -55,7 +55,7 @@
     }
   },
   "dashboard": {
-    "title": "Cabin Booking",
+    "title": "Steens cabins",
     "calendar": "Calendar",
     "myBookings": "My Bookings",
     "newBooking": "New Booking",

@@ -124,9 +124,9 @@ export async function POST(request: Request) {
       }
     }
     
-    // Determine locale from request headers or default to 'en'
+    // Determine locale from request headers or default to 'no'
     const acceptLanguage = request.headers.get('accept-language') || ''
-    const locale = acceptLanguage.includes('no') ? 'no' : 'en'
+    const locale = acceptLanguage.includes('en') ? 'en' : 'no'
     
     // Create user account without sending Supabase email (to avoid rate limits)
     // We'll send a custom invitation email using Resend instead
@@ -167,8 +167,8 @@ export async function POST(request: Request) {
           from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
           to: email,
           subject: locale === 'no' 
-            ? 'Invitasjon til Hytte Booking' 
-            : 'Invitation to Cabin Booking',
+            ? 'Invitasjon til Steens hytter' 
+            : 'Invitation to Steens cabins',
           html: `
             <!DOCTYPE html>
             <html>
@@ -179,7 +179,7 @@ export async function POST(request: Request) {
               <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
                 <div style="background-color: #4f46e5; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
                   <h1 style="margin: 0; font-size: 24px;">
-                    ${locale === 'no' ? 'Invitasjon til Hytte Booking' : 'Invitation to Cabin Booking'}
+                    ${locale === 'no' ? 'Invitasjon til Steens hytter' : 'Invitation to Steens cabins'}
                   </h1>
                 </div>
                 <div style="background-color: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
@@ -190,8 +190,8 @@ export async function POST(request: Request) {
                   </p>
                   <p style="font-size: 16px; margin-bottom: 20px;">
                     ${locale === 'no'
-                      ? 'Du har blitt invitert til å bruke Hytte Booking-tjenesten. Klikk på lenken under for å sette opp ditt passord og komme i gang.'
-                      : 'You have been invited to use the Cabin Booking service. Click the link below to set up your password and get started.'}
+                      ? 'Du har blitt invitert til å bruke Steens hytter. Klikk på lenken under for å sette opp ditt passord og komme i gang.'
+                      : 'You have been invited to use Steens cabins. Click the link below to set up your password and get started.'}
                   </p>
                   <div style="text-align: center; margin: 30px 0;">
                     <a href="${invitationLink}" 

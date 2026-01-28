@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     
     if (error) {
       // Handle specific error types for magic links/OAuth
-      const locale = requestUrl.pathname.split('/')[1] || 'en'
+      const locale = requestUrl.pathname.split('/')[1] || 'no'
       const loginUrl = new URL(`/${locale}/login`, requestUrl.origin)
       
       // Map Supabase errors to user-friendly error codes
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
       // We can infer this from user metadata or creation time
       // For now, we'll let the set-password page handle the check
       // If user already has a password, they can proceed normally
-      const locale = requestUrl.pathname.split('/')[1] || 'en'
+      const locale = requestUrl.pathname.split('/')[1] || 'no'
       const redirectUrl = next || '/dashboard'
       
       // If there's a hint that password setup is needed, redirect to set-password
@@ -68,7 +68,7 @@ export async function GET(request: Request) {
 
     if (error) {
       // Handle specific error types
-      const locale = requestUrl.pathname.split('/')[1] || 'en'
+      const locale = requestUrl.pathname.split('/')[1] || 'no'
       const loginUrl = new URL(`/${locale}/login`, requestUrl.origin)
       
       // Map Supabase errors to user-friendly error codes
@@ -95,7 +95,7 @@ export async function GET(request: Request) {
       // Check if user needs to set password by checking if they can sign in
       // New invited users typically don't have encrypted_password set
       // We'll redirect to set-password page and let it handle the check
-      const locale = requestUrl.pathname.split('/')[1] || 'en'
+      const locale = requestUrl.pathname.split('/')[1] || 'no'
       const setPasswordUrl = new URL(`/${locale}/set-password`, requestUrl.origin)
       if (next) {
         setPasswordUrl.searchParams.set('next', next)

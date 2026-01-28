@@ -24,7 +24,7 @@
     "unknown": "Ukjent"
   },
   "auth": {
-    "title": "Hytte Bookingsystem",
+    "title": "Steens hytter",
     "signInToAccount": "Logg inn på din konto",
     "emailAddress": "E-postadresse",
     "password": "Passord",
@@ -55,7 +55,7 @@
     }
   },
   "dashboard": {
-    "title": "Hytte Booking",
+    "title": "Steens hytter",
     "calendar": "Kalender",
     "myBookings": "Mine Bookinger",
     "newBooking": "Ny Booking",
