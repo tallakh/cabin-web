@@ -109,11 +109,12 @@ export async function PATCH(
       }
     }
 
-    // Only admins can change status, cabin, and payment_status directly
+    // Only admins can change status and payment_status directly
     if (status && !isAdmin) {
       return NextResponse.json({ error: 'Only admins can change booking status' }, { status: 403 })
     }
-    if (cabin_id && !isAdmin) {
+    // Users can keep the same cabin_id, but only admins can change it to a different cabin
+    if (cabin_id && cabin_id !== existingBooking.cabin_id && !isAdmin) {
       return NextResponse.json({ error: 'Only admins can change booking cabin' }, { status: 403 })
     }
     if (payment_status && !isAdmin) {
@@ -218,7 +219,10 @@ export async function PATCH(
       }
     }
     
-    if (cabin_id && isAdmin) updateData.cabin_id = cabin_id
+    // Allow cabin_id update if admin, or if it's the same cabin (user keeping their booking)
+    if (cabin_id && (isAdmin || cabin_id === existingBooking.cabin_id)) {
+      updateData.cabin_id = cabin_id
+    }
     if (start_date) updateData.start_date = start_date
     if (end_date) updateData.end_date = end_date
     if (number_of_guests !== undefined) updateData.number_of_guests = finalGuests
