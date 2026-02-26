@@ -41,6 +41,57 @@ export default function LoginPage() {
     const refreshToken = hashParams.refresh_token
     const tokenType = hashParams.type
     
+    // Handle invite - establish session and redirect to set-password page
+    if (accessToken && tokenType === 'invite') {
+      const handleInvite = async () => {
+        try {
+          setLoading(true)
+          setError(null)
+          setMessage(null)
+
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken || '',
+          })
+
+          if (error) {
+            setError(error.message || t('auth.errors.authFailed'))
+            setLoading(false)
+            const newUrl = new URL(window.location.href)
+            newUrl.hash = ''
+            window.history.replaceState({}, '', newUrl.toString())
+            return
+          }
+
+          if (!data.session || !data.user) {
+            setError(t('auth.sessionNotEstablished'))
+            setLoading(false)
+            const newUrl = new URL(window.location.href)
+            newUrl.hash = ''
+            window.history.replaceState({}, '', newUrl.toString())
+            return
+          }
+
+          const newUrl = new URL(window.location.href)
+          newUrl.hash = ''
+          window.history.replaceState({}, '', newUrl.toString())
+
+          await new Promise(resolve => setTimeout(resolve, 200))
+
+          window.location.href = `/${locale}/set-password?type=invite`
+        } catch (err: any) {
+          setError(err.message || t('errors.generic'))
+          setLoading(false)
+          const newUrl = new URL(window.location.href)
+          newUrl.hash = ''
+          window.history.replaceState({}, '', newUrl.toString())
+        }
+      }
+
+      handleInvite()
+      return
+    }
+
     // Handle password reset (recovery) - redirect to set-password page
     if (accessToken && tokenType === 'recovery') {
       // Establish session from recovery token, then redirect to set-password
